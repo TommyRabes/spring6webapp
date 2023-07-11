@@ -19,7 +19,7 @@ import java.util.Set;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Builder
-@Entity
+@Entity(name = "book_user") // "user" is a reserved keyword in PostgreSQL
 public class User {
 
     @Id

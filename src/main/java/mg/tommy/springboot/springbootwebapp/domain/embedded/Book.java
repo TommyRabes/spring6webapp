@@ -3,7 +3,9 @@ package mg.tommy.springboot.springbootwebapp.domain.embedded;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -19,9 +21,9 @@ public class Book {
     private Set<String> keywords;
     @Column(columnDefinition = "TEXT")
     private String content;
-    private Date publishDate;
+    private LocalDate publishDate;
     @ManyToMany(mappedBy = "books")
-    private Set<Author> authors;
+    private Set<Author> authors = new HashSet<>();
     @ManyToOne
     private Publisher publisher;
 }

@@ -21,13 +21,15 @@ public class Author {
     // @SequenceGenerator(name = "author_generator", sequenceName = "author_seq", allocationSize = 1)
     private Long id;
 
+    // Looks like the Jakarta Bean Validation API does apply
+    // for JPA entity upon database operation
     @NotEmpty
-    @Size(min = 5, max = 255)
+    @Size(min = 3, max = 255)
     @NonNull
     private String firstName;
 
     @NotEmpty
-    @Size(min = 5, max = 255)
+    @Size(min = 3, max = 255)
     @NonNull
     private String lastName;
 

@@ -13,6 +13,10 @@ spring:
       url: jdbc:mysql://localhost:3306/bookmanagement
       username: Tommy
       password: 123456
+    postgres:
+      url: jdbc:postgresql://localhost:5432/bookmanagement
+      username: booker
+      password: 123456
   jpa:
     defer-datasource-initialization: true
   sql:

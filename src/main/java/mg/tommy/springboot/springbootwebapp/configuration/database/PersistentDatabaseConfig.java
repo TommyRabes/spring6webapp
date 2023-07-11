@@ -9,6 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -31,9 +32,17 @@ import java.util.Objects;
 )
 public class PersistentDatabaseConfig {
 
-    @Bean
+    @Profile("default")
+    @Bean("persistentDataSourceProperties")
     @ConfigurationProperties(prefix = "spring.datasource.persistent")
     public DataSourceProperties persistentDataSourceProperties() {
+        return new DataSourceProperties();
+    }
+
+    @Profile("PG")
+    @Bean("persistentDataSourceProperties")
+    @ConfigurationProperties(prefix = "spring.datasource.postgres")
+    public DataSourceProperties postgresDataSourceProperties() {
         return new DataSourceProperties();
     }
 
@@ -46,7 +55,8 @@ public class PersistentDatabaseConfig {
     @Bean
     public LocalContainerEntityManagerFactoryBean persistentEntityManagerFactory(
             @Qualifier("persistentDataSource") DataSource dataSource,
-            EntityManagerFactoryBuilder builder) {
+            EntityManagerFactoryBuilder builder,
+            @Qualifier("persistentJPAProperties") Map<String, String> propertyMap) {
         LocalContainerEntityManagerFactoryBean entityManagerFactory = builder
                 .dataSource(dataSource)
                 .persistenceUnit("Persistent")
@@ -54,7 +64,7 @@ public class PersistentDatabaseConfig {
                 .build();
 
         entityManagerFactory.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
-        entityManagerFactory.setJpaPropertyMap(propertiesMap());
+        entityManagerFactory.setJpaPropertyMap(propertyMap);
         entityManagerFactory.setPersistenceProviderClass(HibernatePersistenceProvider.class);
 
         Objects.requireNonNull(entityManagerFactory.getPersistenceProvider()).generateSchema("Persistent", entityManagerFactory.getJpaPropertyMap());
@@ -74,11 +84,33 @@ public class PersistentDatabaseConfig {
         return new JdbcTemplate(persistentDateSource);
     }
 
-    private Map<String, String> propertiesMap() {
+    @Profile("default")
+    @Bean("persistentJPAProperties")
+    public Map<String, String> mysqlPropertiesMap() {
         // Trying to mimic Spring Boot's default configuration
         Map<String, String> propertiesMap = new HashMap<>();
         // Spring Boot can't guess the appropriate Hibernate Dialect, so I need to specify it explicitly
         propertiesMap.put("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
+
+        // Should be 'create' at first and then 'update' for a non-in-memory database like MySQL
+        propertiesMap.put("hibernate.hbm2ddl.auto", "create-drop");
+        // To implement to custom naming strategy, see https://vladmihalcea.com/hibernate-physical-naming-strategy/
+        propertiesMap.put("hibernate.physical_naming_strategy", "org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy");
+        propertiesMap.put("hibernate.show_sql", "false");
+        propertiesMap.put("hibernate.format_sql", "false");
+        propertiesMap.put("hibernate.use_sql_comments", "false");
+        propertiesMap.put("hibernate.generate_statistics", "false");
+        propertiesMap.put("javax.persistence.sharedCache.mode", "ENABLE_SELECTIVE");
+        return propertiesMap;
+    }
+
+    @Profile("PG")
+    @Bean("persistentJPAProperties")
+    public Map<String, String> postgresPropertiesMap() {
+        // Trying to mimic Spring Boot's default configuration
+        Map<String, String> propertiesMap = new HashMap<>();
+        // Spring Boot can't guess the appropriate Hibernate Dialect, so I need to specify it explicitly
+        propertiesMap.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
 
         // Should be 'create' at first and then 'update' for a non-in-memory database like MySQL
         propertiesMap.put("hibernate.hbm2ddl.auto", "create-drop");
