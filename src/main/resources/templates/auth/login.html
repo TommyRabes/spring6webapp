@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymleaf.org">
+<head th:replace="~{layouts/main :: layout_head (title=~{::title}, links=~{::link})}">
+    <title>Login</title>
+    <link rel="stylesheet" href="../static/css/login.css" th:href="@{/css/login.css}">
+</head>
+<body>
+<header th:replace="~{layouts/main :: layout_nav}"></header>
+
+<div class="login-container">
+    <div class="card">
+        <h1 class="card-title">Login</h1>
+        <form class="d-grid" th:action="@{/login}" method="POST">
+            <p th:if="${param.logout}" class="mb-3 alert alert-success">You have been logged out.</p>
+            <p th:if="${param.error}" class="mb-3 alert alert-danger">Invalid credentials. Please try again.</p>
+            <div class="mb-3">
+                <input type="text" class="form-control" name="email" placeholder="Email" required>
+            </div>
+            <div class="mb-3">
+                <input type="password" class="form-control" name="password" placeholder="Password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+    </div>
+</div>
+
+<footer th:replace="~{layouts/main :: layout_footer}"></footer>
+<th:block th:replace="~{layouts/main :: layout_scripts}" />
+</body>
+</html>

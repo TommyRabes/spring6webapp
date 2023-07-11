@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Dashboard - Backoffice</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="webjars/bootstrap/5.3.0/dist/css/bootstrap.min.css">
+  <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .dashboard-container {
+            padding: 20px;
+        }
+
+        .dashboard-heading {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .dashboard-card {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .card-content {
+            color: #777777;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .btn-primary:hover {
+            background-color: #0069d9;
+            border-color: #0062cc;
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard-container">
+  <h1 class="dashboard-heading">Dashboard</h1>
+
+  <div class="dashboard-card">
+    <h2 class="card-title">Users</h2>
+    <p class="card-content">Manage client accounts and permissions.</p>
+    <a href="/users" class="btn btn-primary">View Users</a>
+  </div>
+
+  <div class="dashboard-card">
+    <h2 class="card-title">Products</h2>
+    <p class="card-content">Manage your inventory and product details.</p>
+    <a href="/products" class="btn btn-primary">View Products</a>
+  </div>
+
+  <div class="dashboard-card">
+    <h2 class="card-title">Orders</h2>
+    <p class="card-content">Track and manage customer orders.</p>
+    <a href="/orders" class="btn btn-primary">View Orders</a>
+  </div>
+</div>
+
+<script src="webjars/bootstrap/5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

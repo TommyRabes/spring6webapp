@@ -1,0 +1,20 @@
+[
+    {
+      "id": 1,
+      "name": "iPhone 12",
+      "price": 999.99,
+      "quantity": 50
+    },
+    {
+      "id": 2,
+      "name": "Samsung Galaxy S21",
+      "price": 899.99,
+      "quantity": 25
+    },
+    {
+      "id": 3,
+      "name": "Google Pixel 6",
+      "price": 799.99,
+      "quantity": 100
+    }
+]

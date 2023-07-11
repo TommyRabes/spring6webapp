@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymleaf.org">
+<head th:replace="~{layouts/main :: layout_head (title=~{::title}, links=~{::link})}">
+    <title>Product List</title>
+    <link rel="stylesheet" href="../static/css/card-list.css" th:href="@{/css/card-list.css}" />
+</head>
+<body>
+<header th:replace="~{layouts/main :: layout_nav}"></header>
+
+<div class="items-container">
+    <h1 class="items-heading">Product List</h1>
+
+    <div class="row">
+        <div th:each="product : ${products}" class="col">
+            <div class="item-card">
+                <h2 th:text="|Product ${product.id}|" class="card-title">Product 1</h2>
+                <p th:utext="|<strong>Name:</strong> ${product.name}|" class="card-content"><strong>Name:</strong> iPhone 12</p>
+                <p th:utext="|<strong>Total price:</strong> $${product.price}|" class="card-content"><strong>Total price:</strong> $999.99</p>
+                <p th:utext="|<strong>Quantity:</strong> ${product.quantity}|" class="card-content"><strong>Quantity:</strong> 50</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{layouts/main :: layout_footer}"></footer>
+<th:block th:replace="~{layouts/main :: layout_scripts}" />
+</body>
+</html>

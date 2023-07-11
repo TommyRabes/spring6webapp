@@ -1,0 +1,56 @@
+[
+    {
+      "id": 1,
+      "client": {
+        "id": 1,
+        "name": "John Doe",
+        "email": "john.doe@example.com",
+        "birthdate": "1998-06-15"
+      },
+      "product": {
+        "id": 2,
+        "name": "Samsung Galaxy S21",
+        "price": 899.99,
+        "quantity": 25
+      },
+      "quantity": 2,
+      "totalPrice": 39.98,
+      "status": "Shipped"
+    },
+    {
+      "id": 2,
+      "client": {
+        "id": 3,
+        "name": "Mark Johnson",
+        "email": "mark.johnson@example.com",
+        "birthdate": "1995-03-28"
+      },
+      "product": {
+        "id": 1,
+        "name": "iPhone 12",
+        "price": 999.99,
+        "quantity": 50
+      },
+      "quantity": 3,
+      "totalPrice": 32.97,
+      "status": "Delivered"
+    },
+    {
+      "id": 3,
+      "client": {
+        "id": 2,
+        "name": "Jane Smith",
+        "email": "jane.smith@example.com",
+        "birthdate": "1993-12-02"
+      },
+      "product": {
+        "id": 3,
+        "name": "Google Pixel 6",
+        "price": 799.99,
+        "quantity": 100
+      },
+      "quantity": 1,
+      "totalPrice": 5.99,
+      "status": "Pending"
+    }
+]

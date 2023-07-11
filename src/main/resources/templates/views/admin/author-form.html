@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymleaf.org">
+<head th:replace="~{layouts/main :: layout_head (title=~{::title}, links=~{::link})}">
+    <title>Author form</title>
+    <link rel="stylesheet" href="../static/css/login.css" th:href="@{/css/login.css}">
+</head>
+<body>
+<header th:replace="~{layouts/main :: layout_nav}"></header>
+
+<div class="login-container">
+    <div class="card">
+        <h1 class="card-title">Add new author</h1>
+        <form class="d-grid" th:action="@{/authors}" th:object="${author}" method="POST">
+            <div class="mb-3" th:classappend="${#fields.hasErrors('firstName')} ? 'has-errors'">
+                <label for="firstName" class="form-label">First name</label>
+                <input type="text" class="form-control" id="firstName" placeholder="Enter first name" name="firstName" th:field="*{firstName}">
+                <span th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}">First name error message</span>
+            </div>
+            <div class="mb-3" th:classappend="${#fields.hasErrors('lastName')} ? 'has-errors'">
+                <label for="lastName" class="form-label">Last name</label>
+                <input type="text" class="form-control" id="lastName" placeholder="Enter last name" name="lastName" th:field="*{lastName}">
+                <span th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}">Last name error message</span>
+            </div>
+            <div class="mb-3" th:classappend="${#fields.hasErrors('email')} ? 'has-errors'">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" placeholder="Enter email" name="email" th:field="*{email}">
+                <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Email error message</span>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Author</button>
+        </form>
+    </div>
+</div>
+
+<footer th:replace="~{layouts/main :: layout_footer}"></footer>
+<th:block th:replace="~{layouts/main :: layout_scripts}" />
+</body>
+</html>

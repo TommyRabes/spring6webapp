@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymleaf.org">
+<head th:replace="~{layouts/main :: layout_head (title=~{::title}, links=~{::link})}">
+    <title>User List</title>
+    <link rel="stylesheet" href="../static/css/card-list.css" th:href="@{/css/card-list.css}" />
+</head>
+<body>
+<header th:replace="~{layouts/main :: layout_nav}"></header>
+
+<div class="items-container">
+    <h1 class="items-heading">Client List</h1>
+
+    <div class="row">
+        <div th:each="client : ${clients}" class="col">
+            <div class="item-card">
+                <h2 th:text="|Client ${client.id}|" class="card-title">Client 3</h2>
+                <p th:utext="|<strong>Name:</strong> ${client.name}|" class="card-content"><strong>Name:</strong> Mark Johnson</p>
+                <p th:utext="|<strong>Email:</strong> ${client.email}|" class="card-content"><strong>Email:</strong> mark.johnson@example.com</p>
+                <p th:utext="|<strong>Age:</strong> ${#calendars.format(client.birthdate,'MM/dd/yyyy')}|" class="card-content"><strong>Age:</strong> 28</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{layouts/main :: layout_footer}"></footer>
+<th:block th:replace="~{layouts/main :: layout_scripts}" />
+</body>
+</html>

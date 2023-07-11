@@ -1,0 +1,41 @@
+spring:
+  h2:
+    console:
+      enabled: true
+      path: /console
+  datasource:
+    embedded:
+      # From Spring Boot 2.3.0 onwards, unless this property is set,
+      # an in-memory database is auto-generated with a "random" database name
+      # Anyway, the url can be found within logs on application startup
+      url: jdbc:h2:mem:spring-experimental
+    persistent:
+      url: jdbc:mysql://localhost:3306/bookmanagement
+      username: Tommy
+      password: 123456
+  jpa:
+    defer-datasource-initialization: true
+  sql:
+    init:
+      platform: h2
+#  mvc:
+#    pathmatch:
+#      matching-strategy: ant_path_matcher
+
+#  security:
+#    user:
+#      name: Tommy
+#      password: 123456
+#      roles: GUEST,CLIENT
+  mail:
+    host: smtp.gmail.com
+    username: rabesalama.tommy@gmail.com
+    password: tommy17andritiana27rabesalama897
+    port: 587
+    properties:
+      mail:
+        debug: true
+        smtp:
+          auth: true
+          starttls:
+            enable: true

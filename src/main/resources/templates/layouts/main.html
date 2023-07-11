@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head th:fragment="layout_head(title, links)">
+    <title th:replace="${title}">My Blog Post Site</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="webjars/bootstrap/5.3.0/dist/css/bootstrap.min.css"
+          th:href="@{/webjars/bootstrap/5.3.0/dist/css/bootstrap.min.css}">
+
+    <th:block th:replace="${links}" />
+</head>
+<body>
+<header class="bg-dark py-3" th:fragment="layout_nav">
+    <nav class="container d-flex align-items-center justify-content-between">
+        <ul class="nav">
+            <li class="nav-item">
+                <a class="nav-link text-light" href="/">Home</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-light" href="/posts/latest">News</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-light" href="#">About</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-light" href="/posts">Posts</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-light" href="/authors">Authors</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-light" href="#">Contact</a>
+            </li>
+        </ul>
+        <div class="d-flex text-light">
+            Welcome&nbsp;<span sec:authentication="name"></span>&nbsp;
+            <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="POST" class="nav-item">
+                <input type="submit" class="nav-link" value="Logout" />
+            </form>
+        </div>
+    </nav>
+</header>
+
+<div class="content py-4" th:fragment="layout_content(content)">
+    <th:block th:replace="${content}" />
+</div>
+
+<footer class="bg-dark py-3 text-light text-center" th:fragment="layout_footer">
+    <div class="container">
+        &copy; 2023 My Blog Post Site. All rights reserved.
+    </div>
+</footer>
+<th:block th:fragment="layout_scripts">
+    <script src="../webjars/bootstrap/5.3.0/dist/js/bootstrap.bundle.min.js"
+            th:src="@{/webjars/bootstrap/5.3.0/dist/js/bootstrap.bundle.min.js}"></script>
+</th:block>
+
+</body>
+</html>

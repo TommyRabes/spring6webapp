@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymleaf.org">
+<head th:replace="~{layouts/main :: layout_head (title=~{::title}, links=~{::link})}">
+    <title>Order List</title>
+    <link rel="stylesheet" href="../static/css/card-list.css" th:href="@{/css/card-list.css}" />
+</head>
+<body>
+<header th:replace="~{layouts/main :: layout_nav}"></header>
+
+<div class="items-container">
+    <h1 class="items-heading">Order List</h1>
+
+    <div class="row">
+        <div th:each="order : ${orders}" class="col">
+            <div class="item-card">
+                <h2 th:text="|Order ${order.id}|" class="card-title">Order 3</h2>
+                <p th:utext="|<strong>Client:</strong> ${order.client.name}|" class="card-content"><strong>Client:</strong> John Doe</p>
+                <p th:utext="|<strong>Product:</strong> ${order.product.name}|" class="card-content"><strong>Product:</strong> Sony PlayStation 5</p>
+                <p th:utext="|<strong>Quantity:</strong> ${order.quantity}|" class="card-content"><strong>Quantity:</strong> 2</p>
+                <p th:utext="|<strong>Total price:</strong> $${order.totalPrice}|" class="card-content"><strong>Total price:</strong> $1999.98</p>
+                <p th:utext="|<strong>Status:</strong> ${order.status}|" class="card-content"><strong>Status:</strong> Pending</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{layouts/main :: layout_footer}"></footer>
+<th:block th:replace="~{layouts/main :: layout_scripts}" />
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymleaf.org">
+<head th:replace="~{layouts/main :: layout_head (title=~{::title}, links=~{::link})}">
+  <title>Latest Blog Post</title>
+  <link rel="stylesheet" href="../static/css/post.css" th:href="@{/css/post.css}">
+</head>
+<body>
+<header th:replace="~{layouts/main :: layout_nav}"></header>
+
+<div class="blog-container" layout:fragment="content">
+  <h1 class="blog-heading" th:text="${post.title}">A Journey Through Nature</h1>
+  <div th:utext="${post.teaser}">
+    <p class="blog-content">
+      As I stepped into the wilderness, I could feel the fresh breeze caressing my face, and the soothing sounds of birds singing in the distance. The trail ahead was filled with lush greenery and colorful wildflowers. It was a perfect escape from the chaos of the city, a chance to reconnect with nature.
+    </p>
+    <p class="blog-content">
+      The winding path led me deeper into the heart of the forest. Tall trees towered above, creating a natural canopy that filtered the sunlight, casting mesmerizing shadows on the ground. The air was filled with the earthy scent of moss and damp soil, a scent that instantly brought a sense of tranquility.
+    </p>
+    <p class="blog-content">
+      Along the way, I encountered a gentle stream, its crystal-clear waters meandering through the rocks. I sat on a moss-covered stone, mesmerized by the rhythmic flow of water. The symphony of nature embraced me, and for a moment, I lost track of time.
+    </p>
+    <p class="blog-content">
+      As the sun began its descent, painting the sky with hues of orange and pink, I knew it was time to bid farewell to this enchanting paradise. But I carried with me the memories of this serene journey, a reminder of the beauty and peace that nature generously bestows upon us.
+    </p>
+  </div>
+  <a href="#" th:href="|@{/posts/}${post.slug}|">Read more</a>
+  <div class="blog-author">
+    Written by <a href="#" th:href="|mailto:${post.author.email}|" th:text="|${post.author.firstName} ${post.author.lastName}|">John Doe</a>
+  </div>
+  <div class="blog-date" th:text="|Published on ${#calendars.format(post.postedOn, 'MMM dd, yyyy')}|">
+    Published on May 26, 2023
+  </div>
+</div>
+
+<footer th:replace="~{layouts/main :: layout_footer}"></footer>
+<th:block th:replace="~{layouts/main :: layout_scripts}" />
+</body>
+</html>

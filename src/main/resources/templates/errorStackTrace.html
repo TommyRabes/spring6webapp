@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymleaf.org">
+<head th:replace="~{layouts/main :: layout_head (title=~{::title}, links=~{::link})}">
+  <title>Internal Server Error</title>
+  <link rel="stylesheet" href="../static/css/errorStackTrace.css" th:href="@{/css/errorStackTrace.css}" />
+</head>
+<body>
+<header th:replace="~{layouts/main :: layout_nav}"></header>
+
+<div class="error-container">
+  <h1>500</h1>
+  <p>Oops! An internal server error occurred.</p>
+  <pre th:utext="|<strong>${exceptionType}:</strong> ${exceptionMessage}|">Server stack trace history</pre>
+  <a href="#">Go Back</a>
+</div>
+
+<footer th:replace="~{layouts/main :: layout_footer}"></footer>
+<th:block th:replace="~{layouts/main :: layout_scripts}" />
+</body>
+</html>

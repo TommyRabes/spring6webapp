@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymleaf.org">
+<head th:replace="~{layouts/main :: layout_head (title=~{::title}, links=~{::link})}">
+  <title>List of Authors</title>
+  <link rel="stylesheet" href="../static/css/authors.css" th:href="@{/css/authors.css}">
+</head>
+<body>
+<header th:replace="~{layouts/main :: layout_nav}"></header>
+
+<div class="container list-container">
+  <p th:if="${successMessage}" class="alert alert-success">
+    <b>Operation succeed : </b> <span th:text="${successMessage}">Author created</span>
+  </p>
+  <p th:if="${informationMessage}" class="alert alert-primary">
+    <b>Operation succeed : </b> <span th:text="${informationMessage}">Author deleted</span>
+  </p>
+  <p th:if="${errorMessage}" class="alert alert-danger">
+    <b>Operation failure : </b> <span th:text="${errorMessage}">Author not deleted</span>
+  </p>
+  <div>
+    <h1>List of Authors</h1>
+    <a th:href="@{/authors/create}" class="btn btn-primary">Add a new author</a>
+  </div>
+
+  <table class="table">
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>First name</th>
+      <th>Last name</th>
+      <th>Email</th>
+      <th>Posts</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="author : ${authors}">
+      <td th:text="${author.id}">1</td>
+      <td th:text="${author.firstName}">John</td>
+      <td th:text="${author.lastName}">Doe</td>
+      <td th:text="${author.email}">johndoe@example.com</td>
+      <td th:text="${author.posts.size}">15</td>
+      <td><a href="#" th:href="@{/authors/edit/} + ${author.id}">Edit</a></td>
+      <td><a href="#" th:href="@{/authors/delete/} + ${author.id}">Delete</a></td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+
+<footer th:replace="~{layouts/main :: layout_footer}"></footer>
+<th:block th:replace="~{layouts/main :: layout_scripts}" />
+</body>
+</html>
