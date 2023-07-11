@@ -4,8 +4,8 @@ import lombok.AllArgsConstructor;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Beer;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.BeerRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
-import javax.swing.text.html.Option;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,6 +35,22 @@ public class BeerServiceImpl implements BeerService {
     }
 
     @Override
+    public Beer overwriteById(UUID uuid, Beer beer) {
+        Optional<Beer> beerToUpdate = beerRepository.findById(uuid);
+        if (beerToUpdate.isEmpty()) {
+            return beerRepository.save(beer);
+        }
+        Beer.BeerBuilder builder = beerToUpdate.get().toBuilder()
+                .beerName(beer.getBeerName())
+                .beerStyle(beer.getBeerStyle())
+                .price(beer.getPrice())
+                .quantityOnHand(beer.getQuantityOnHand())
+                .upc(beer.getUpc())
+                .updateDate(LocalDateTime.now());
+        return beerRepository.save(builder.build());
+    }
+
+    @Override
     public Beer updateById(UUID uuid, Beer beer) {
         Optional<Beer> beerToUpdate = beerRepository.findById(uuid);
         if (beerToUpdate.isEmpty()) {
@@ -42,7 +58,7 @@ public class BeerServiceImpl implements BeerService {
             return null;
         }
         Beer.BeerBuilder builder = beerToUpdate.get().toBuilder();
-        if (beer.getBeerName() != null)
+        if (StringUtils.hasText(beer.getBeerName()))
             builder.beerName(beer.getBeerName());
         if (beer.getBeerStyle() != null)
             builder.beerStyle(beer.getBeerStyle());
@@ -50,7 +66,7 @@ public class BeerServiceImpl implements BeerService {
             builder.price(beer.getPrice());
         if (beer.getQuantityOnHand() != null)
             builder.quantityOnHand(beer.getQuantityOnHand());
-        if (beer.getUpc() != null)
+        if (StringUtils.hasText(beer.getUpc()))
             builder.upc(beer.getUpc());
         builder.updateDate(LocalDateTime.now());
         return beerRepository.save(builder.build());

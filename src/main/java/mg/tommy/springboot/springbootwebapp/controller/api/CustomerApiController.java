@@ -43,11 +43,17 @@ public class CustomerApiController {
 
     @PutMapping("{uuid}")
     public ResponseEntity updateCustomer(@PathVariable("uuid") UUID uuid, @RequestBody Customer customer) {
-        Customer updatedCustomer = customerService.updateById(uuid, customer);
-        if (updatedCustomer == null) {
-            customerService.save(customer);
-        }
+        customerService.overwriteById(uuid, customer);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @PatchMapping("{uuid}")
+    public ResponseEntity patchCustomer(@PathVariable("uuid") UUID uuid, @RequestBody Customer customer) {
+        Customer patchedCustomer = customerService.updateById(uuid, customer);
+        if (patchedCustomer == null) {
+            return new ResponseEntity(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
     @DeleteMapping("{uuid}")

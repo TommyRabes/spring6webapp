@@ -42,14 +42,11 @@ public class BeerApiController {
 
     @PutMapping("{uuid}")
     public ResponseEntity updateById(@PathVariable("uuid") UUID uuid, @RequestBody Beer beer) {
-        Beer updatedBeer = beerService.updateById(uuid, beer);
-        if (updatedBeer == null) {
-            beerService.save(beer);
-        }
+        beerService.overwriteById(uuid, beer);
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("uuid")
+    @PatchMapping("{uuid}")
     public ResponseEntity patchById(@PathVariable("uuid") UUID uuid, @RequestBody Beer beer) {
         Beer updatedBeer = beerService.updateById(uuid, beer);
         if (updatedBeer == null) {
