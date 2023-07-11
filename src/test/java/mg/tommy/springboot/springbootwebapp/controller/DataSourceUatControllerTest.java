@@ -7,7 +7,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@ActiveProfiles({"Uat", "PG"})
+@ActiveProfiles({"Uat"})
 @SpringBootTest
 class DataSourceUatControllerTest {
 
