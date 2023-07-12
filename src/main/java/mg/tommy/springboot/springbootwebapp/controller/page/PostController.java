@@ -1,7 +1,7 @@
-package mg.tommy.springboot.springbootwebapp.controller;
+package mg.tommy.springboot.springbootwebapp.controller.page;
 
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Post;
-import mg.tommy.springboot.springbootwebapp.service.PostService;
+import mg.tommy.springboot.springbootwebapp.service.library.PostService;
 // import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;

@@ -1,4 +1,4 @@
-package mg.tommy.springboot.springbootwebapp.service;
+package mg.tommy.springboot.springbootwebapp.service.traveling;
 
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Itinerary;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Plan;

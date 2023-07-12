@@ -3,7 +3,7 @@ package mg.tommy.springboot.springbootwebapp.controller.api;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Customer;
-import mg.tommy.springboot.springbootwebapp.service.CustomerService;
+import mg.tommy.springboot.springbootwebapp.service.library.CustomerService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package mg.tommy.springboot.springbootwebapp.service;
+package mg.tommy.springboot.springbootwebapp.service.library;
 
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Post;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.PostRepository;

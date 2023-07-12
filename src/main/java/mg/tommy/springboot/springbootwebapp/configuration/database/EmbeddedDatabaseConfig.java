@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-@Profile("!(Dev | Prod | QA | Uat)")
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(

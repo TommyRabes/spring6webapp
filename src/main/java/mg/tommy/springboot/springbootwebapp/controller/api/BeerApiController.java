@@ -3,7 +3,7 @@ package mg.tommy.springboot.springbootwebapp.controller.api;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Beer;
-import mg.tommy.springboot.springbootwebapp.service.BeerService;
+import mg.tommy.springboot.springbootwebapp.service.brewing.BeerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

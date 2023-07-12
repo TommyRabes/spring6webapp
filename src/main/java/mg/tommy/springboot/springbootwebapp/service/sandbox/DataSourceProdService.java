@@ -1,4 +1,4 @@
-package mg.tommy.springboot.springbootwebapp.service;
+package mg.tommy.springboot.springbootwebapp.service.sandbox;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;

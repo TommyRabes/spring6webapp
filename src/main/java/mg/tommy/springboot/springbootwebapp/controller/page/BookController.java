@@ -1,6 +1,6 @@
 package mg.tommy.springboot.springbootwebapp.controller.page;
 
-import mg.tommy.springboot.springbootwebapp.service.BookService;
+import mg.tommy.springboot.springbootwebapp.service.library.BookService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;

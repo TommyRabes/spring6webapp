@@ -1,8 +1,8 @@
-package mg.tommy.springboot.springbootwebapp.controller;
+package mg.tommy.springboot.springbootwebapp.controller.page;
 
-import mg.tommy.springboot.springbootwebapp.service.MarketService;
+import mg.tommy.springboot.springbootwebapp.service.library.MarketService;
 // import org.springframework.security.access.prepost.PreAuthorize;
-import mg.tommy.springboot.springbootwebapp.service.UserService;
+import mg.tommy.springboot.springbootwebapp.service.library.UserService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

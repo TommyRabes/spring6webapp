@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.*;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.*;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -14,6 +16,8 @@ import java.time.LocalDateTime;
 
 @Slf4j
 @AllArgsConstructor
+@Profile({"Full", "Database"})
+@Scope("singleton")
 @Component
 public class CommandLineInitializer implements CommandLineRunner {
     private final AuthorRepository authorRepository;

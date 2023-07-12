@@ -1,5 +1,6 @@
-package mg.tommy.springboot.springbootwebapp.controller;
+package mg.tommy.springboot.springbootwebapp.controller.page;
 
+import mg.tommy.springboot.springbootwebapp.controller.page.PageErrorController;
 import mg.tommy.springboot.springbootwebapp.exception.PlanNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;

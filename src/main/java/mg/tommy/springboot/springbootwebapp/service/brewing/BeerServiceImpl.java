@@ -1,4 +1,4 @@
-package mg.tommy.springboot.springbootwebapp.service;
+package mg.tommy.springboot.springbootwebapp.service.brewing;
 
 import lombok.AllArgsConstructor;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Beer;

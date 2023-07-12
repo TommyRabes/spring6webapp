@@ -1,6 +1,6 @@
-package mg.tommy.springboot.springbootwebapp.controller;
+package mg.tommy.springboot.springbootwebapp.controller.sandbox;
 
-import mg.tommy.springboot.springbootwebapp.service.DataSourceService;
+import mg.tommy.springboot.springbootwebapp.service.sandbox.DataSourceService;
 import org.springframework.stereotype.Controller;
 
 @Controller
