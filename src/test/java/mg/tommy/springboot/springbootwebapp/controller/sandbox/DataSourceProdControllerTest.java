@@ -1,4 +1,4 @@
-package mg.tommy.springboot.springbootwebapp.controller;
+package mg.tommy.springboot.springbootwebapp.controller.sandbox;
 
 import mg.tommy.springboot.springbootwebapp.controller.sandbox.DataSourceController;
 import org.junit.jupiter.api.Test;

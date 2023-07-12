@@ -1,4 +1,4 @@
-package mg.tommy.springboot.springbootwebapp.controller;
+package mg.tommy.springboot.springbootwebapp.controller.sandbox;
 
 import mg.tommy.springboot.springbootwebapp.controller.sandbox.DataSourceController;
 import org.junit.jupiter.api.Test;
@@ -13,7 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@ActiveProfiles({"Dev", "sandbox"})
+@ActiveProfiles({"Uat", "sandbox"})
 @SpringBootTest
 @EnableAutoConfiguration(exclude = {
         SecurityAutoConfiguration.class,
@@ -22,13 +22,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
         DataSourceAutoConfiguration.class,
         DataSourceTransactionManagerAutoConfiguration.class
 })
-class DataSourceDevControllerTest {
+class DataSourceUatControllerTest {
 
     @Autowired
     private DataSourceController controller;
 
     @Test
     void getDataSource() {
-        assertEquals("Dev Data Source", controller.getDataSource());
+        assertEquals("Uat Data Source", controller.getDataSource());
     }
 }
