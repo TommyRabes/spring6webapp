@@ -46,6 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class CustomerApiControllerTest {
     private static final Customer BAILEY = Customer.builder()
             .id(UUID.randomUUID())
+            .version(1)
             .firstName("Bailey")
             .lastName("Summer")
             .email("bsum@gmail.com")
@@ -54,6 +55,7 @@ class CustomerApiControllerTest {
 
     private static final Customer BOOKER = Customer.builder()
             .id(UUID.randomUUID())
+            .version(1)
             .firstName("Booker")
             .lastName("Reynold")
             .email("reybook@gmail.com")
@@ -62,6 +64,7 @@ class CustomerApiControllerTest {
 
     private static final Customer SHERLEY = Customer.builder()
             .id(UUID.randomUUID())
+            .version(1)
             .firstName("Sherley")
             .lastName("Sirius")
             .email("sirisherley@gmail.com")
@@ -138,7 +141,10 @@ class CustomerApiControllerTest {
 
     @Test
     public void saveCustomerTest() throws Exception {
-        Customer customer = SHERLEY.toBuilder().id(null).build();
+        Customer customer = SHERLEY.toBuilder()
+                .id(null)
+                .version(null)
+                .build();
 
         given(customerService.save(any(Customer.class))).willReturn(SHERLEY);
 

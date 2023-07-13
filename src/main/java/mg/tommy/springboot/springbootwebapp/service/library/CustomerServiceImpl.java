@@ -28,6 +28,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Customer save(Customer customer) {
         return customerRepository.save(customer.toBuilder()
+                .version(1)
                 .createdDate(LocalDateTime.now())
                 .updateDate(LocalDateTime.now())
                 .build());

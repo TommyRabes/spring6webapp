@@ -1,8 +1,6 @@
 package mg.tommy.springboot.springbootwebapp.domain.embedded;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,8 +17,21 @@ import java.util.UUID;
 @Entity
 public class Beer {
     @Id
-    @GeneratedValue
+    /**
+     * Prior to Hibernate 6.2 (Hibernate 4.x and 5.x), you can use one the two approaches to generate UUID
+     */
+    // The verbose approach:
+    // @GeneratedValue(strategy = GenerationType.UUID)
+    // @GenericGenerator(name = "UUID", type = UuidGenerator.class)
+    // @Column(length = 36, columnDefinition = "varchar", updatable = false, nullable = false, unique = true)
+
+    // Single annotation approach
+    // @UuidGenerator
+
+    // But this one is recommended as of Hibernate 6.2
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+    @Version
     private Integer version;
     private String beerName;
     private BeerStyle beerStyle;
