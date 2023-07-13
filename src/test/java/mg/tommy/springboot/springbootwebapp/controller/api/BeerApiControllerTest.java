@@ -3,6 +3,7 @@ package mg.tommy.springboot.springbootwebapp.controller.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Beer;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.BeerStyle;
+import mg.tommy.springboot.springbootwebapp.dto.BeerDto;
 import mg.tommy.springboot.springbootwebapp.service.brewing.BeerService;
 import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.Test;
@@ -51,7 +52,7 @@ import static org.hamcrest.core.Is.is;
  */
 @Import({ BeerApiController.class, ControllerExceptionHandler.class })
 class BeerApiControllerTest {
-    private static final Beer GALAXY = Beer.builder()
+    private static final BeerDto GALAXY = BeerDto.builder()
             .id(UUID.randomUUID())
             .version(1)
             .beerName("Galaxy Cat")
@@ -62,7 +63,7 @@ class BeerApiControllerTest {
             .createdDate(LocalDateTime.now())
             .updateDate(LocalDateTime.now())
             .build();
-    private static final Beer SUNSHINE = Beer.builder()
+    private static final BeerDto SUNSHINE = BeerDto.builder()
             .id(UUID.randomUUID())
             .version(1)
             .beerName("Sunshine City")
@@ -74,7 +75,7 @@ class BeerApiControllerTest {
             .updateDate(LocalDateTime.now())
             .build();
 
-    private static final Beer MANGO = Beer.builder()
+    private static final BeerDto MANGO = BeerDto.builder()
             .id(UUID.randomUUID())
             .version(1)
             .beerName("Mango Bobs")
@@ -105,7 +106,7 @@ class BeerApiControllerTest {
     ArgumentCaptor<UUID> uuidArgumentCaptor;
 
     @Captor
-    ArgumentCaptor<Beer> beerArgumentCaptor;
+    ArgumentCaptor<BeerDto> beerArgumentCaptor;
 
     @Test
     public void getAllBeerTest() throws Exception {
@@ -148,19 +149,19 @@ class BeerApiControllerTest {
          */
         // objectMapper.findAndRegisterModules();
 
-        Beer beer = MANGO.toBuilder()
+        BeerDto beerDto = MANGO.toBuilder()
                 .id(null)
-                .version(1)
+                .version(null)
                 .createdDate(null)
                 .updateDate(null)
                 .build();
 
-        given(beerService.save(any(Beer.class))).willReturn(MANGO);
+        given(beerService.save(any(BeerDto.class))).willReturn(MANGO);
 
         mockMvc.perform(post(ROOT_PATH)
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(beer)))
+                        .content(objectMapper.writeValueAsString(beerDto)))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andExpect(header().string("Location", "/api/v1/beers/" + MANGO.getId()));
@@ -168,7 +169,7 @@ class BeerApiControllerTest {
 
     @Test
     public void updateByIdTest() throws Exception {
-        Beer beer = MANGO.toBuilder()
+        BeerDto beerDto = MANGO.toBuilder()
                 .id(null)
                 .version(null)
                 .beerName("Mango Bobs - TRB")
@@ -181,10 +182,10 @@ class BeerApiControllerTest {
         mockMvc.perform(put(UUID_PATH, MANGO.getId())
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(beer)))
+                        .content(objectMapper.writeValueAsString(beerDto)))
                 .andExpect(status().isNoContent());
 
-        verify(beerService).overwriteById(any(UUID.class), any(Beer.class));
+        verify(beerService).overwriteById(any(UUID.class), any(BeerDto.class));
     }
 
     @Test
@@ -207,7 +208,7 @@ class BeerApiControllerTest {
         Map<String, String> beerMap = new HashMap<>();
         beerMap.put("beerName", "Mango Bobs - TRB");
 
-        given(beerService.updateById(any(UUID.class), any(Beer.class))).willReturn(mock(Beer.class));
+        given(beerService.updateById(any(UUID.class), any(BeerDto.class))).willReturn(mock(BeerDto.class));
 
         mockMvc.perform(patch(UUID_PATH, MANGO.getId())
                         .accept(MediaType.APPLICATION_JSON)

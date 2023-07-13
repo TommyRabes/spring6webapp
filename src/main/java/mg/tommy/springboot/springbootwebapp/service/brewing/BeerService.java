@@ -1,19 +1,19 @@
 package mg.tommy.springboot.springbootwebapp.service.brewing;
 
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Beer;
+import mg.tommy.springboot.springbootwebapp.dto.BeerDto;
 
 import java.util.Optional;
 import java.util.UUID;
 
 public interface BeerService {
-    Iterable<Beer> findAll();
-    Optional<Beer> findById(UUID id);
+    Iterable<BeerDto> findAll();
+    Optional<BeerDto> findById(UUID id);
 
-    Beer save(Beer beer);
+    BeerDto save(BeerDto beer);
 
-    Beer overwriteById(UUID uuid, Beer beer);
+    BeerDto overwriteById(UUID uuid, BeerDto beer);
 
-    Beer updateById(UUID uuid, Beer beer);
+    BeerDto updateById(UUID uuid, BeerDto beer);
 
     void deleteById(UUID uuid);
 }

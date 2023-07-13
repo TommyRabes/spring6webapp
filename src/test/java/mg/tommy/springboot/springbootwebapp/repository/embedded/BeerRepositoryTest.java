@@ -1,5 +1,6 @@
 package mg.tommy.springboot.springbootwebapp.repository.embedded;
 
+import mg.tommy.springboot.springbootwebapp.bootstrap.CommandLineInitializer;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Beer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

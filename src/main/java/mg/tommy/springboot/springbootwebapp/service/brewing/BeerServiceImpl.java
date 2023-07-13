@@ -1,7 +1,9 @@
 package mg.tommy.springboot.springbootwebapp.service.brewing;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Beer;
+import mg.tommy.springboot.springbootwebapp.dto.BeerDto;
+import mg.tommy.springboot.springbootwebapp.mapper.BeerMapper;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.BeerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -9,36 +11,45 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-@AllArgsConstructor
+import static java.util.stream.Collectors.toList;
+
+@RequiredArgsConstructor
 @Service
 public class BeerServiceImpl implements BeerService {
     private final BeerRepository beerRepository;
+    private final BeerMapper beerMapper;
 
     @Override
-    public Iterable<Beer> findAll() {
-        return beerRepository.findAll();
+    public Iterable<BeerDto> findAll() {
+        return beerRepository.findAll()
+                .stream()
+                .map(beerMapper::toBeerDto)
+                .collect(toList());
     }
 
     @Override
-    public Optional<Beer> findById(UUID id) {
-        return beerRepository.findById(id);
+    public Optional<BeerDto> findById(UUID id) {
+        return beerRepository.findById(id).map(beerMapper::toBeerDto);
     }
 
     @Override
-    public Beer save(Beer beer) {
-        return beerRepository.save(beer.toBuilder()
-                .version(1)
-                .createdDate(LocalDateTime.now())
-                .updateDate(LocalDateTime.now())
-                .build());
+    public BeerDto save(BeerDto beer) {
+        return beerMapper.toBeerDto(
+                beerRepository.save(beerMapper.toBeer(beer).toBuilder()
+                        .createdDate(LocalDateTime.now())
+                        .updateDate(LocalDateTime.now())
+                        .build())
+        );
     }
 
     @Override
-    public Beer overwriteById(UUID uuid, Beer beer) {
+    public BeerDto overwriteById(UUID uuid, BeerDto beerDto) {
+        Beer beer = beerMapper.toBeer(beerDto);
         Optional<Beer> beerToUpdate = beerRepository.findById(uuid);
         if (beerToUpdate.isEmpty()) {
-            return beerRepository.save(beer);
+            return beerMapper.toBeerDto(beerRepository.save(beer));
         }
         Beer.BeerBuilder builder = beerToUpdate.get().toBuilder()
                 .beerName(beer.getBeerName())
@@ -47,29 +58,29 @@ public class BeerServiceImpl implements BeerService {
                 .quantityOnHand(beer.getQuantityOnHand())
                 .upc(beer.getUpc())
                 .updateDate(LocalDateTime.now());
-        return beerRepository.save(builder.build());
+        return beerMapper.toBeerDto(beerRepository.save(builder.build()));
     }
 
     @Override
-    public Beer updateById(UUID uuid, Beer beer) {
+    public BeerDto updateById(UUID uuid, BeerDto beerDto) {
         Optional<Beer> beerToUpdate = beerRepository.findById(uuid);
         if (beerToUpdate.isEmpty()) {
             // Ideally throw an exception or return a meaningful response
             return null;
         }
         Beer.BeerBuilder builder = beerToUpdate.get().toBuilder();
-        if (StringUtils.hasText(beer.getBeerName()))
-            builder.beerName(beer.getBeerName());
-        if (beer.getBeerStyle() != null)
-            builder.beerStyle(beer.getBeerStyle());
-        if (beer.getPrice() != null)
-            builder.price(beer.getPrice());
-        if (beer.getQuantityOnHand() != null)
-            builder.quantityOnHand(beer.getQuantityOnHand());
-        if (StringUtils.hasText(beer.getUpc()))
-            builder.upc(beer.getUpc());
+        if (StringUtils.hasText(beerDto.getBeerName()))
+            builder.beerName(beerDto.getBeerName());
+        if (beerDto.getBeerStyle() != null)
+            builder.beerStyle(beerDto.getBeerStyle());
+        if (beerDto.getPrice() != null)
+            builder.price(beerDto.getPrice());
+        if (beerDto.getQuantityOnHand() != null)
+            builder.quantityOnHand(beerDto.getQuantityOnHand());
+        if (StringUtils.hasText(beerDto.getUpc()))
+            builder.upc(beerDto.getUpc());
         builder.updateDate(LocalDateTime.now());
-        return beerRepository.save(builder.build());
+        return beerMapper.toBeerDto(beerRepository.save(builder.build()));
     }
 
     @Override

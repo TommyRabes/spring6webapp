@@ -2,6 +2,7 @@ package mg.tommy.springboot.springbootwebapp.controller.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Customer;
+import mg.tommy.springboot.springbootwebapp.dto.CustomerDto;
 import mg.tommy.springboot.springbootwebapp.service.library.CustomerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 )
 @Import({ CustomerApiController.class, ControllerExceptionHandler.class })
 class CustomerApiControllerTest {
-    private static final Customer BAILEY = Customer.builder()
+    private static final CustomerDto BAILEY = CustomerDto.builder()
             .id(UUID.randomUUID())
             .version(1)
             .firstName("Bailey")
@@ -53,7 +54,7 @@ class CustomerApiControllerTest {
             .birthdate(LocalDate.of(2001, 12, 29))
             .build();
 
-    private static final Customer BOOKER = Customer.builder()
+    private static final CustomerDto BOOKER = CustomerDto.builder()
             .id(UUID.randomUUID())
             .version(1)
             .firstName("Booker")
@@ -62,7 +63,7 @@ class CustomerApiControllerTest {
             .birthdate(LocalDate.of(1997, 4, 13))
             .build();
 
-    private static final Customer SHERLEY = Customer.builder()
+    private static final CustomerDto SHERLEY = CustomerDto.builder()
             .id(UUID.randomUUID())
             .version(1)
             .firstName("Sherley")
@@ -86,7 +87,7 @@ class CustomerApiControllerTest {
     ArgumentCaptor<UUID> uuidArgumentCaptor;
 
     @Captor
-    ArgumentCaptor<Customer> customerArgumentCaptor;
+    ArgumentCaptor<CustomerDto> customerArgumentCaptor;
 
     @BeforeEach
     public void arrange() {
@@ -141,17 +142,17 @@ class CustomerApiControllerTest {
 
     @Test
     public void saveCustomerTest() throws Exception {
-        Customer customer = SHERLEY.toBuilder()
+        CustomerDto customerDto = SHERLEY.toBuilder()
                 .id(null)
                 .version(null)
                 .build();
 
-        given(customerService.save(any(Customer.class))).willReturn(SHERLEY);
+        given(customerService.save(any(CustomerDto.class))).willReturn(SHERLEY);
 
         mockMvc.perform(post(ROOT_PATH)
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(customer)))
+                        .content(objectMapper.writeValueAsString(customerDto)))
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", ROOT_PATH + "/" + SHERLEY.getId()))
                 .andExpect(jsonPath("$.id", is(SHERLEY.getId().toString())))
@@ -163,7 +164,7 @@ class CustomerApiControllerTest {
 
     @Test
     public void updateCustomerTest() throws Exception {
-        Customer customer = SHERLEY.toBuilder()
+        CustomerDto customerDto = SHERLEY.toBuilder()
                 .id(null)
                 .firstName("Shayan")
                 .lastName("Lauren")
@@ -175,10 +176,10 @@ class CustomerApiControllerTest {
         mockMvc.perform(put(UUID_PATH, SHERLEY.getId())
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(customer)))
+                        .content(objectMapper.writeValueAsString(customerDto)))
                 .andExpect(status().isNoContent());
 
-        verify(customerService).overwriteById(eq(SHERLEY.getId()), eq(customer));
+        verify(customerService).overwriteById(eq(SHERLEY.getId()), eq(customerDto));
     }
 
     @Test
@@ -196,9 +197,9 @@ class CustomerApiControllerTest {
     public void patchCustomerTest() throws Exception {
         Map<String, String> customerMap = new HashMap<>();
         customerMap.put("firstName", "Updated First name");
-        Customer customer = Customer.builder().firstName(customerMap.get("firstName")).build();
+        CustomerDto customerDto = CustomerDto.builder().firstName(customerMap.get("firstName")).build();
 
-        given(customerService.updateById(any(UUID.class), any(Customer.class))).willReturn(mock(Customer.class));
+        given(customerService.updateById(any(UUID.class), any(CustomerDto.class))).willReturn(mock(CustomerDto.class));
 
         mockMvc.perform(patch(UUID_PATH, SHERLEY.getId())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -208,6 +209,6 @@ class CustomerApiControllerTest {
         verify(customerService).updateById(uuidArgumentCaptor.capture(), customerArgumentCaptor.capture());
 
         assertThat(uuidArgumentCaptor.getValue()).isEqualTo(SHERLEY.getId());
-        assertThat(customerArgumentCaptor.getValue()).isEqualTo(customer);
+        assertThat(customerArgumentCaptor.getValue()).isEqualTo(customerDto);
     }
 }

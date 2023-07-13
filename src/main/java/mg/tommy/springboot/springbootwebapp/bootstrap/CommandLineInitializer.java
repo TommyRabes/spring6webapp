@@ -1,7 +1,6 @@
 package mg.tommy.springboot.springbootwebapp.bootstrap;
 
-import lombok.AllArgsConstructor;
-import lombok.extern.java.Log;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.*;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.*;
@@ -15,7 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Profile({"Full", "Database"})
 @Scope("singleton")
 @Component
@@ -36,7 +35,6 @@ public class CommandLineInitializer implements CommandLineRunner {
 
     private void insertBeerData() {
         beerRepository.save(Beer.builder()
-                .version(1)
                 .beerName("Galaxy Cat")
                 .beerStyle(BeerStyle.PALE_ALE)
                 .upc("06546127")
@@ -47,7 +45,6 @@ public class CommandLineInitializer implements CommandLineRunner {
                 .build());
 
         beerRepository.save(Beer.builder()
-                .version(1)
                 .beerName("Crank")
                 .beerStyle(BeerStyle.PALE_ALE)
                 .upc("168673")
@@ -58,7 +55,6 @@ public class CommandLineInitializer implements CommandLineRunner {
                 .build());
 
         beerRepository.save(Beer.builder()
-                .version(1)
                 .beerName("Sunshine City")
                 .beerStyle(BeerStyle.IPA)
                 .upc("98726454")
