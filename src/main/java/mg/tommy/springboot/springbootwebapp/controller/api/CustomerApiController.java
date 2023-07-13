@@ -15,8 +15,10 @@ import java.util.UUID;
 @Slf4j
 @AllArgsConstructor
 @RestController
-@RequestMapping("/api/v1/customers")
+@RequestMapping(CustomerApiController.ROOT_PATH)
 public class CustomerApiController {
+    public static final String ROOT_PATH = "/api/v1/customers";
+    
     private final CustomerService customerService;
 
     @RequestMapping(method = RequestMethod.GET)
