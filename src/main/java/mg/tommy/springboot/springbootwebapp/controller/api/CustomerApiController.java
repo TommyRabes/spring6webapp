@@ -30,7 +30,7 @@ public class CustomerApiController {
     public ResponseEntity<Customer> getCustomerByUUID(@PathVariable("uuid") UUID uuid) {
         Optional<Customer> customer = customerService.findById(uuid);
         if (customer.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            throw new NotFoundException("Customer with uuid : " + uuid + " not found");
         }
         return ResponseEntity.ok().body(customer.get());
     }

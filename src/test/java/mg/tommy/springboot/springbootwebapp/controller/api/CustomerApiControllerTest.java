@@ -1,6 +1,5 @@
 package mg.tommy.springboot.springbootwebapp.controller.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Customer;
 import mg.tommy.springboot.springbootwebapp.service.library.CustomerService;
@@ -23,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import static java.util.Optional.empty;
 import static mg.tommy.springboot.springbootwebapp.controller.api.CustomerApiController.ROOT_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.util.Lists.list;
@@ -42,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 SecurityAutoConfiguration.class
         }
 )
-@Import(CustomerApiController.class)
+@Import({ CustomerApiController.class, ControllerExceptionHandler.class })
 class CustomerApiControllerTest {
     private static final Customer BAILEY = Customer.builder()
             .id(UUID.randomUUID())
@@ -126,6 +126,14 @@ class CustomerApiControllerTest {
                 .andExpect(jsonPath("$.lastName", is(BAILEY.getLastName())))
                 .andExpect(jsonPath("$.email", is(BAILEY.getEmail())))
                 .andExpect(jsonPath("$.birthdate", is(BAILEY.getBirthdate().toString())));
+    }
+
+    @Test
+    public void getCustomerUUIDNotFoundTest() throws Exception {
+        given(customerService.findById(any(UUID.class))).willReturn(empty());
+
+        mockMvc.perform(get(UUID_PATH, UUID.randomUUID()))
+                .andExpect(status().isNotFound());
     }
 
     @Test

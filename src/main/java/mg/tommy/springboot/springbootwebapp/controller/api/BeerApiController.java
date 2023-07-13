@@ -29,7 +29,7 @@ public class BeerApiController {
     public ResponseEntity<Beer> getBeerByUUID(@PathVariable("uuid") UUID uuid) {
         Optional<Beer> beer = beerService.findById(uuid);
         if (beer.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            throw new NotFoundException("Beer with uuid : " + uuid + " not found");
         }
         return ResponseEntity.ok().body(beer.get());
     }
@@ -62,4 +62,5 @@ public class BeerApiController {
         beerService.deleteById(uuid);
         return ResponseEntity.noContent().build();
     }
+
 }

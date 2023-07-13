@@ -1,6 +1,5 @@
 package mg.tommy.springboot.springbootwebapp.controller.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Beer;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.BeerStyle;
@@ -8,20 +7,17 @@ import mg.tommy.springboot.springbootwebapp.service.brewing.BeerService;
 import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Captor;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -30,6 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import static java.util.Optional.empty;
 import static mg.tommy.springboot.springbootwebapp.controller.api.BeerApiController.ROOT_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -44,8 +41,15 @@ import static org.hamcrest.core.Is.is;
         controllers = { BeerApiController.class },
         excludeAutoConfiguration = { SecurityAutoConfiguration.class }
 )
-// For some reason, this annotation is necessary despite specifying the controller being tested in @WebMvcTest
-@Import(BeerApiController.class)
+/**
+ * For some reason, this annotation is necessary despite specifying the controller being tested in @WebMvcTest
+ * Moreover, @ControllerAdvice-annotated classes don't get picked up in a unit test context
+ * as that error handling technique is based on Servlet container error mapping
+ * while Spring MockMvc is container-less
+ * Nonetheless it seems to work fine when we explicitly add the class through @Import annotation
+ * Does it mean MockMvc is somehow able to mimic Spring Boot's behaviour (at least the error handling part) ?
+ */
+@Import({ BeerApiController.class, ControllerExceptionHandler.class })
 class BeerApiControllerTest {
     private static final Beer GALAXY = Beer.builder()
             .id(UUID.randomUUID())
@@ -124,6 +128,14 @@ class BeerApiControllerTest {
                 .andExpect(jsonPath("$.beerName", is(GALAXY.getBeerName())))
                 .andExpect(jsonPath("$.beerStyle", is(GALAXY.getBeerStyle().name())))
                 .andExpect(jsonPath("$.price", is(GALAXY.getPrice().doubleValue())));
+    }
+
+    @Test
+    public void getBeerByIdNotFoundTest() throws Exception {
+        given(beerService.findById(any(UUID.class))).willReturn(empty());
+
+        mockMvc.perform(get(UUID_PATH, UUID.randomUUID()))
+                .andExpect(status().isNotFound());
     }
 
     @Test
