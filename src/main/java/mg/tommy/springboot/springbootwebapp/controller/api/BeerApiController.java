@@ -27,11 +27,10 @@ public class BeerApiController {
 
     @GetMapping("{uuid}")
     public ResponseEntity<BeerDto> getBeerByUUID(@PathVariable("uuid") UUID uuid) {
-        Optional<BeerDto> beerDto = beerService.findById(uuid);
-        if (beerDto.isEmpty()) {
-            throw new NotFoundException("Beer with uuid : " + uuid + " not found");
-        }
-        return ResponseEntity.ok().body(beerDto.get());
+        return ResponseEntity.ok()
+                .body(beerService.findById(uuid)
+                        .orElseThrow(() -> new NotFoundException("Beer with uuid : " + uuid + " not found"))
+                );
     }
 
     @PostMapping

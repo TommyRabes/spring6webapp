@@ -28,11 +28,10 @@ public class CustomerApiController {
 
     @GetMapping("{uuid}")
     public ResponseEntity<CustomerDto> getCustomerByUUID(@PathVariable("uuid") UUID uuid) {
-        Optional<CustomerDto> customer = customerService.findById(uuid);
-        if (customer.isEmpty()) {
-            throw new NotFoundException("Customer with uuid : " + uuid + " not found");
-        }
-        return ResponseEntity.ok().body(customer.get());
+        return ResponseEntity.ok()
+                .body(customerService.findById(uuid)
+                        .orElseThrow(() -> new NotFoundException("Customer with uuid : " + uuid + " not found"))
+                );
     }
 
     @PostMapping

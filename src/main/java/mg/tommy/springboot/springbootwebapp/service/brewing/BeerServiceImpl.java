@@ -46,17 +46,16 @@ public class BeerServiceImpl implements BeerService {
 
     @Override
     public BeerDto overwriteById(UUID uuid, BeerDto beerDto) {
-        Beer beer = beerMapper.toBeer(beerDto);
         Optional<Beer> beerToUpdate = beerRepository.findById(uuid);
         if (beerToUpdate.isEmpty()) {
-            return beerMapper.toBeerDto(beerRepository.save(beer));
+            return beerMapper.toBeerDto(beerRepository.save(beerMapper.toBeer(beerDto)));
         }
         Beer.BeerBuilder builder = beerToUpdate.get().toBuilder()
-                .beerName(beer.getBeerName())
-                .beerStyle(beer.getBeerStyle())
-                .price(beer.getPrice())
-                .quantityOnHand(beer.getQuantityOnHand())
-                .upc(beer.getUpc())
+                .beerName(beerDto.getBeerName())
+                .beerStyle(beerDto.getBeerStyle())
+                .price(beerDto.getPrice())
+                .quantityOnHand(beerDto.getQuantityOnHand())
+                .upc(beerDto.getUpc())
                 .updateDate(LocalDateTime.now());
         return beerMapper.toBeerDto(beerRepository.save(builder.build()));
     }
