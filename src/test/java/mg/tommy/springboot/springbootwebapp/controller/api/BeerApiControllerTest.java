@@ -31,6 +31,7 @@ import static java.util.Optional.empty;
 import static mg.tommy.springboot.springbootwebapp.controller.api.BeerApiController.ROOT_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -179,6 +180,8 @@ class BeerApiControllerTest {
                 .price(new BigDecimal("19.99"))
                 .build();
 
+        given(beerService.overwriteById(eq(MANGO.getId()), eq(beerDto))).willReturn(Optional.of(mock(BeerDto.class)));
+
         mockMvc.perform(put(UUID_PATH, MANGO.getId())
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -189,10 +192,51 @@ class BeerApiControllerTest {
     }
 
     @Test
+    public void updateByIdNotFoundTest() throws Exception {
+        BeerDto beerDto = MANGO.toBuilder()
+                .id(null)
+                .version(null)
+                .beerName("Mango Bobs - TRB")
+                .beerStyle(BeerStyle.IPA)
+                .upc("485125")
+                .quantityOnHand(160)
+                .price(new BigDecimal("19.99"))
+                .build();
+
+        mockMvc.perform(put(UUID_PATH, UUID.randomUUID())
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(beerDto)))
+                .andExpect(status().isNotFound());
+
+        verify(beerService).overwriteById(any(UUID.class), any(BeerDto.class));
+    }
+
+    @Test
     public void deleteByIdTest() throws Exception {
+        given(beerService.deleteById(any(UUID.class))).willReturn(true);
+
         mockMvc.perform(delete(UUID_PATH, MANGO.getId())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
+
+        ArgumentCaptor<UUID> uuidArgumentCaptor = ArgumentCaptor.forClass(UUID.class);
+        verify(beerService).deleteById(uuidArgumentCaptor.capture());
+
+        assertThat(MANGO.getId()).isEqualTo(uuidArgumentCaptor.getValue());
+    }
+
+    @Test
+    public void deleteByIdNotFoundTest() throws Exception {
+        given(beerService.deleteById(any(UUID.class))).willReturn(false);
+
+        mockMvc.perform(delete(UUID_PATH, MANGO.getId())
+                        .accept(MediaType.APPLICATION_JSON))
+                /*
+                 * In hindsight, a real unit test should just test whether the method throw an exception
+                 * Here, the NOT_FOUND status is returned by a @ControllerAdvice annotated class (not really 'unity')
+                 */
+                .andExpect(status().isNotFound());
 
         ArgumentCaptor<UUID> uuidArgumentCaptor = ArgumentCaptor.forClass(UUID.class);
         verify(beerService).deleteById(uuidArgumentCaptor.capture());
@@ -208,13 +252,32 @@ class BeerApiControllerTest {
         Map<String, String> beerMap = new HashMap<>();
         beerMap.put("beerName", "Mango Bobs - TRB");
 
-        given(beerService.updateById(any(UUID.class), any(BeerDto.class))).willReturn(mock(BeerDto.class));
+        given(beerService.updateById(any(UUID.class), any(BeerDto.class))).willReturn(Optional.of(mock(BeerDto.class)));
 
         mockMvc.perform(patch(UUID_PATH, MANGO.getId())
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(beerMap)))
                 .andExpect(status().isNoContent());
+
+        verify(beerService).updateById(uuidArgumentCaptor.capture(), beerArgumentCaptor.capture());
+
+        assertThat(uuidArgumentCaptor.getValue()).isEqualTo(MANGO.getId());
+        assertThat(beerArgumentCaptor.getValue().getBeerName()).isEqualTo(beerMap.get("beerName"));
+    }
+
+    @Test
+    public void patchByIdNotFoundTest() throws Exception {
+        Map<String, String> beerMap = new HashMap<>();
+        beerMap.put("beerName", "Mango Bobs - TRB");
+
+        given(beerService.updateById(any(UUID.class), any(BeerDto.class))).willReturn(Optional.empty());
+
+        mockMvc.perform(patch(UUID_PATH, MANGO.getId())
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(beerMap)))
+                .andExpect(status().isNotFound());
 
         verify(beerService).updateById(uuidArgumentCaptor.capture(), beerArgumentCaptor.capture());
 

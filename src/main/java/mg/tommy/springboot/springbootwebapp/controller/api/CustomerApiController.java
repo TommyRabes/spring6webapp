@@ -44,22 +44,27 @@ public class CustomerApiController {
 
     @PutMapping("{uuid}")
     public ResponseEntity updateCustomer(@PathVariable("uuid") UUID uuid, @RequestBody CustomerDto customerDto) {
-        customerService.overwriteById(uuid, customerDto);
+        Optional<CustomerDto> overwrittenCustomer = customerService.overwriteById(uuid, customerDto);
+        if (overwrittenCustomer.isEmpty()) {
+            throw new NotFoundException("Customer of id: " + uuid + " not found");
+        }
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @PatchMapping("{uuid}")
     public ResponseEntity patchCustomer(@PathVariable("uuid") UUID uuid, @RequestBody CustomerDto customerDto) {
-        CustomerDto patchedCustomer = customerService.updateById(uuid, customerDto);
-        if (patchedCustomer == null) {
-            return new ResponseEntity(HttpStatus.NOT_FOUND);
+        Optional<CustomerDto> patchedCustomer = customerService.updateById(uuid, customerDto);
+        if (patchedCustomer.isEmpty()) {
+            throw new NotFoundException("Customer of id: " + uuid + " not found");
         }
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
     @DeleteMapping("{uuid}")
     public ResponseEntity deleteCustomer(@PathVariable("uuid") UUID uuid) {
-        customerService.deleteById(uuid);
+        if (!customerService.deleteById(uuid)) {
+            throw new NotFoundException("Customer of id: " + uuid + " not found");
+        }
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

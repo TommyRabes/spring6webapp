@@ -11,7 +11,7 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.stream.Collectors.toList;
 
@@ -45,27 +45,30 @@ public class BeerServiceImpl implements BeerService {
     }
 
     @Override
-    public BeerDto overwriteById(UUID uuid, BeerDto beerDto) {
-        Optional<Beer> beerToUpdate = beerRepository.findById(uuid);
-        if (beerToUpdate.isEmpty()) {
-            return beerMapper.toBeerDto(beerRepository.save(beerMapper.toBeer(beerDto)));
-        }
-        Beer.BeerBuilder builder = beerToUpdate.get().toBuilder()
-                .beerName(beerDto.getBeerName())
-                .beerStyle(beerDto.getBeerStyle())
-                .price(beerDto.getPrice())
-                .quantityOnHand(beerDto.getQuantityOnHand())
-                .upc(beerDto.getUpc())
-                .updateDate(LocalDateTime.now());
-        return beerMapper.toBeerDto(beerRepository.save(builder.build()));
+    public Optional<BeerDto> overwriteById(UUID uuid, BeerDto beerDto) {
+        AtomicReference<Optional<BeerDto>> atomicReference = new AtomicReference<>();
+        beerRepository.findById(uuid)
+                .ifPresentOrElse(beerToUpdate -> {
+                    Beer updatedBeer = beerRepository.save(beerToUpdate.toBuilder()
+                            .beerName(beerDto.getBeerName())
+                            .beerStyle(beerDto.getBeerStyle())
+                            .price(beerDto.getPrice())
+                            .quantityOnHand(beerDto.getQuantityOnHand())
+                            .upc(beerDto.getUpc())
+                            .updateDate(LocalDateTime.now())
+                            .build());
+                    atomicReference.set(Optional.of(beerMapper.toBeerDto(updatedBeer)));
+                }, () -> {
+                    atomicReference.set(Optional.empty());
+                });
+        return atomicReference.get();
     }
 
     @Override
-    public BeerDto updateById(UUID uuid, BeerDto beerDto) {
+    public Optional<BeerDto> updateById(UUID uuid, BeerDto beerDto) {
         Optional<Beer> beerToUpdate = beerRepository.findById(uuid);
         if (beerToUpdate.isEmpty()) {
-            // Ideally throw an exception or return a meaningful response
-            return null;
+            return Optional.empty();
         }
         Beer.BeerBuilder builder = beerToUpdate.get().toBuilder();
         if (StringUtils.hasText(beerDto.getBeerName()))
@@ -79,11 +82,15 @@ public class BeerServiceImpl implements BeerService {
         if (StringUtils.hasText(beerDto.getUpc()))
             builder.upc(beerDto.getUpc());
         builder.updateDate(LocalDateTime.now());
-        return beerMapper.toBeerDto(beerRepository.save(builder.build()));
+        return Optional.ofNullable(beerMapper.toBeerDto(beerRepository.save(builder.build())));
     }
 
     @Override
-    public void deleteById(UUID uuid) {
+    public boolean deleteById(UUID uuid) {
+        if (!beerRepository.existsById(uuid))
+            return false;
+
         beerRepository.deleteById(uuid);
+        return true;
     }
 }

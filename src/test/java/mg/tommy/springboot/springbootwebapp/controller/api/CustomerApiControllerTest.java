@@ -173,6 +173,8 @@ class CustomerApiControllerTest {
                 .updateDate(null)
                 .build();
 
+        given(customerService.overwriteById(eq(SHERLEY.getId()), eq(customerDto))).willReturn(Optional.of(mock(CustomerDto.class)));
+
         mockMvc.perform(put(UUID_PATH, SHERLEY.getId())
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -183,10 +185,47 @@ class CustomerApiControllerTest {
     }
 
     @Test
+    public void updateCustomerNotFoundTest() throws Exception {
+        CustomerDto customerDto = SHERLEY.toBuilder()
+                .id(null)
+                .firstName("Shayan")
+                .lastName("Lauren")
+                .email("shayanlauren@gmail.com")
+                .createdDate(null)
+                .updateDate(null)
+                .build();
+
+        given(customerService.overwriteById(any(UUID.class), eq(customerDto))).willReturn(Optional.empty());
+
+        mockMvc.perform(put(UUID_PATH, UUID.randomUUID())
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(customerDto)))
+                .andExpect(status().isNotFound());
+
+        verify(customerService).overwriteById(any(UUID.class), eq(customerDto));
+    }
+
+    @Test
     public void deleteCustomerTest() throws Exception {
+        given(customerService.deleteById(any(UUID.class))).willReturn(true);
+
         mockMvc.perform(delete(UUID_PATH, SHERLEY.getId())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
+
+        verify(customerService).deleteById(uuidArgumentCaptor.capture());
+
+        assertThat(uuidArgumentCaptor.getValue()).isEqualTo(SHERLEY.getId());
+    }
+
+    @Test
+    public void deleteCustomerNotFoundTest() throws Exception {
+        given(customerService.deleteById(any(UUID.class))).willReturn(false);
+
+        mockMvc.perform(delete(UUID_PATH, SHERLEY.getId())
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
 
         verify(customerService).deleteById(uuidArgumentCaptor.capture());
 
@@ -199,12 +238,31 @@ class CustomerApiControllerTest {
         customerMap.put("firstName", "Updated First name");
         CustomerDto customerDto = CustomerDto.builder().firstName(customerMap.get("firstName")).build();
 
-        given(customerService.updateById(any(UUID.class), any(CustomerDto.class))).willReturn(mock(CustomerDto.class));
+        given(customerService.updateById(any(UUID.class), any(CustomerDto.class))).willReturn(Optional.of(mock(CustomerDto.class)));
 
         mockMvc.perform(patch(UUID_PATH, SHERLEY.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(customerMap)))
                 .andExpect(status().isNoContent());
+
+        verify(customerService).updateById(uuidArgumentCaptor.capture(), customerArgumentCaptor.capture());
+
+        assertThat(uuidArgumentCaptor.getValue()).isEqualTo(SHERLEY.getId());
+        assertThat(customerArgumentCaptor.getValue()).isEqualTo(customerDto);
+    }
+
+    @Test
+    public void patchCustomerNotFoundTest() throws Exception {
+        Map<String, String> customerMap = new HashMap<>();
+        customerMap.put("firstName", "Updated First name");
+        CustomerDto customerDto = CustomerDto.builder().firstName(customerMap.get("firstName")).build();
+
+        given(customerService.updateById(any(UUID.class), any(CustomerDto.class))).willReturn(Optional.empty());
+
+        mockMvc.perform(patch(UUID_PATH, SHERLEY.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(customerMap)))
+                .andExpect(status().isNotFound());
 
         verify(customerService).updateById(uuidArgumentCaptor.capture(), customerArgumentCaptor.capture());
 

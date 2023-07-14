@@ -1,6 +1,5 @@
 package mg.tommy.springboot.springbootwebapp.service.library;
 
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Customer;
 import mg.tommy.springboot.springbootwebapp.dto.CustomerDto;
 
 import java.util.Optional;
@@ -12,9 +11,9 @@ public interface CustomerService {
 
     CustomerDto save(CustomerDto customer);
 
-    CustomerDto overwriteById(UUID uuid, CustomerDto customer);
+    Optional<CustomerDto> overwriteById(UUID uuid, CustomerDto customer);
 
-    CustomerDto updateById(UUID uuid, CustomerDto customer);
+    Optional<CustomerDto> updateById(UUID uuid, CustomerDto customer);
 
-    void deleteById(UUID uuid);
+    boolean deleteById(UUID uuid);
 }

@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
 
 @SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -40,8 +41,8 @@ class BeerApiControllerIT {
 
     /**
      * No need to specify a specific bean this time ?
-     * Either Spring is smart enough to figure out which is the appropriate EntityManager
-     * or since it's JPA annotation, all the magic are done by Hibernate which could make sense because Hibernate
+     * Either Spring is smart enough to figure out which is the appropriate EntityManager (by spotting the @Transactional via reflection on the overlying test method)
+     * or since it's a JPA annotation, all the magic are done by Hibernate which could make sense because Hibernate
      * should be able to figure out which DataSource he should utilize as per the type of the object that is passed to it
      */
     @PersistenceContext
@@ -118,7 +119,7 @@ class BeerApiControllerIT {
         Beer beer = beerRepository.findAll().get(0);
         /**
          * Must detach this JPA entity from the current Hibernate session
-         * otherwise, the underlying update operation will alter this instance as well
+         * otherwise the underlying update operation will alter this instance as well
          * We want to freeze that instance in order to compare the previous entity state against its new state
          */
         entityManager.detach(beer);
@@ -147,5 +148,35 @@ class BeerApiControllerIT {
         assertThat(updatedBeer.getCreatedDate()).isEqualTo(beer.getCreatedDate());
         assertThat(updatedBeer.getUpdateDate()).isNotNull();
         assertThat(updatedBeer.getUpdateDate()).isNotEqualTo(beer.getUpdateDate());
+    }
+
+    @Transactional("embeddedTransactionManager")
+    @Rollback
+    @Test
+    public void updateBeerByIdNotFoundTest() {
+        assertThrows(NotFoundException.class, () -> {
+            beerApiController.updateById(UUID.randomUUID(), mock(BeerDto.class));
+        });
+    }
+
+    @Transactional("embeddedTransactionManager")
+    @Rollback
+    @Test
+    public void deleteByIdTest() {
+        Beer beer = beerRepository.findAll().get(0);
+        ResponseEntity responseEntity = beerApiController.deleteById(beer.getId());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        Optional<Beer> foundBeer = beerRepository.findById(beer.getId());
+        assertThat(foundBeer).isEmpty();
+    }
+
+    @Transactional("embeddedTransactionManager")
+    @Rollback
+    @Test
+    public void deleteByIdNotFoundTest() {
+        assertThrows(NotFoundException.class, () -> {
+            beerApiController.deleteById(UUID.randomUUID());
+        });
     }
 }

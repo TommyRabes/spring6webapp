@@ -43,22 +43,27 @@ public class BeerApiController {
 
     @PutMapping("{uuid}")
     public ResponseEntity updateById(@PathVariable("uuid") UUID uuid, @RequestBody BeerDto beerDto) {
-        beerService.overwriteById(uuid, beerDto);
+        Optional<BeerDto> updatedBeer = beerService.overwriteById(uuid, beerDto);
+        if (updatedBeer.isEmpty()) {
+            throw new NotFoundException("Beer of id: " + uuid + " not found");
+        }
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("{uuid}")
     public ResponseEntity patchById(@PathVariable("uuid") UUID uuid, @RequestBody BeerDto beerDto) {
-        BeerDto updatedBeer = beerService.updateById(uuid, beerDto);
-        if (updatedBeer == null) {
-            return ResponseEntity.notFound().build();
+        Optional<BeerDto> updatedBeer = beerService.updateById(uuid, beerDto);
+        if (updatedBeer.isEmpty()) {
+            throw new NotFoundException("Beer of id: " + uuid + " not found");
         }
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("{uuid}")
     public ResponseEntity deleteById(@PathVariable("uuid") UUID uuid) {
-        beerService.deleteById(uuid);
+        if (!beerService.deleteById(uuid)) {
+            throw new NotFoundException("Beer of id: " + uuid + " not found");
+        }
         return ResponseEntity.noContent().build();
     }
 
