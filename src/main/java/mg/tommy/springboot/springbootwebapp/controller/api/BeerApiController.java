@@ -1,10 +1,14 @@
 package mg.tommy.springboot.springbootwebapp.controller.api;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mg.tommy.springboot.springbootwebapp.dto.BeerDto;
+import mg.tommy.springboot.springbootwebapp.dto.constraint.group.BeerGroup;
+import mg.tommy.springboot.springbootwebapp.dto.constraint.group.PartialBeerGroup;
 import mg.tommy.springboot.springbootwebapp.service.brewing.BeerService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -34,7 +38,7 @@ public class BeerApiController {
     }
 
     @PostMapping
-    public ResponseEntity<BeerDto> saveBeer(@RequestBody BeerDto beerDto) {
+    public ResponseEntity<BeerDto> saveBeer(@Validated(BeerGroup.class) @RequestBody BeerDto beerDto) {
         BeerDto savedBeer = beerService.save(beerDto);
         return ResponseEntity
                 .created(URI.create("/api/v1/beers/" + savedBeer.getId().toString()))
@@ -42,7 +46,8 @@ public class BeerApiController {
     }
 
     @PutMapping("{uuid}")
-    public ResponseEntity updateById(@PathVariable("uuid") UUID uuid, @RequestBody BeerDto beerDto) {
+    public ResponseEntity updateById(@PathVariable("uuid") UUID uuid,
+                                     @Validated(BeerGroup.class) @RequestBody BeerDto beerDto) {
         Optional<BeerDto> updatedBeer = beerService.overwriteById(uuid, beerDto);
         if (updatedBeer.isEmpty()) {
             throw new NotFoundException("Beer of id: " + uuid + " not found");
@@ -51,7 +56,8 @@ public class BeerApiController {
     }
 
     @PatchMapping("{uuid}")
-    public ResponseEntity patchById(@PathVariable("uuid") UUID uuid, @RequestBody BeerDto beerDto) {
+    public ResponseEntity patchById(@PathVariable("uuid") UUID uuid,
+                                    @Validated(PartialBeerGroup.class) @RequestBody BeerDto beerDto) {
         Optional<BeerDto> updatedBeer = beerService.updateById(uuid, beerDto);
         if (updatedBeer.isEmpty()) {
             throw new NotFoundException("Beer of id: " + uuid + " not found");

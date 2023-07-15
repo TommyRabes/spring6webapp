@@ -8,7 +8,6 @@ import mg.tommy.springboot.springbootwebapp.repository.embedded.CustomerReposito
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Example;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.Rollback;
@@ -139,7 +138,7 @@ class CustomerApiControllerIT {
     @Rollback
     @Test
     public void deleteCustomerTest() {
-        final Long initialCustomerCount = customerRepository.count();
+        final long initialCustomerCount = customerRepository.count();
         final UUID uuidToDelete = customerRepository.findAll().get(0).getId();
 
         ResponseEntity responseEntity = customerApiController.deleteCustomer(uuidToDelete);

@@ -1,5 +1,5 @@
 package mg.tommy.springboot.springbootwebapp.domain.embedded;
 
 public enum BeerStyle {
-    ALE, IPA, PALE_ALE
+    LAGER, PILSNER, STOUT, GOSE, PORTER, ALE, WHEAT, IPA, PALE_ALE, SAISON
 }

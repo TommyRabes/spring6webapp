@@ -141,7 +141,7 @@ class BeerApiControllerIT {
         assertThat(updatedBeer.getId()).isNotNull();
         assertThat(updatedBeer.getVersion()).isNotNull();
         assertThat(updatedBeer.getBeerName()).isEqualTo(beerDto.getBeerName());
-        assertThat(updatedBeer.getBeerStyle()).isEqualTo(beerDto.getBeerStyle());
+        assertThat(updatedBeer.getBeerStyle().name()).isEqualTo(beerDto.getBeerStyle());
         assertThat(updatedBeer.getUpc()).isEqualTo(beerDto.getUpc());
         assertThat(updatedBeer.getPrice()).isEqualTo(beerDto.getPrice());
         assertThat(updatedBeer.getQuantityOnHand()).isEqualTo(beerDto.getQuantityOnHand());
@@ -177,6 +177,42 @@ class BeerApiControllerIT {
     public void deleteByIdNotFoundTest() {
         assertThrows(NotFoundException.class, () -> {
             beerApiController.deleteById(UUID.randomUUID());
+        });
+    }
+
+    @Transactional("embeddedTransactionManager")
+    @Rollback
+    @Test
+    public void patchByIdTest() {
+        Beer beerToPatch = beerRepository.findAll().get(0);
+        entityManager.detach(beerToPatch);
+
+        BeerDto beerForPatch = BeerDto.builder()
+                .beerName("New beer name")
+                .build();
+
+        ResponseEntity responseEntity = beerApiController.patchById(beerToPatch.getId(), beerForPatch);
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        Beer patchedBeer = beerRepository.findById(beerToPatch.getId()).get();
+
+        assertThat(patchedBeer.getId()).isEqualTo(beerToPatch.getId());
+        assertThat(patchedBeer.getVersion()).isEqualTo(beerToPatch.getVersion());
+        assertThat(patchedBeer.getBeerName()).isEqualTo(beerForPatch.getBeerName());
+        assertThat(patchedBeer.getBeerStyle()).isEqualTo(beerToPatch.getBeerStyle());
+        assertThat(patchedBeer.getUpc()).isEqualTo(beerToPatch.getUpc());
+        assertThat(patchedBeer.getPrice()).isEqualTo(beerToPatch.getPrice());
+        assertThat(patchedBeer.getQuantityOnHand()).isEqualTo(beerToPatch.getQuantityOnHand());
+        assertThat(patchedBeer.getCreatedDate()).isEqualTo(beerToPatch.getCreatedDate());
+        assertThat(patchedBeer.getUpdateDate()).isNotEqualTo(beerToPatch.getUpdateDate());
+    }
+
+    @Transactional("embeddedTransactionManager")
+    @Rollback
+    @Test
+    public void patchByIdNotFoundTest() {
+        assertThrows(NotFoundException.class, () -> {
+            beerApiController.patchById(UUID.randomUUID(), mock(BeerDto.class));
         });
     }
 }

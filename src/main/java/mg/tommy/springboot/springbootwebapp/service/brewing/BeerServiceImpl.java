@@ -2,6 +2,7 @@ package mg.tommy.springboot.springbootwebapp.service.brewing;
 
 import lombok.RequiredArgsConstructor;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Beer;
+import mg.tommy.springboot.springbootwebapp.domain.embedded.BeerStyle;
 import mg.tommy.springboot.springbootwebapp.dto.BeerDto;
 import mg.tommy.springboot.springbootwebapp.mapper.BeerMapper;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.BeerRepository;
@@ -51,7 +52,7 @@ public class BeerServiceImpl implements BeerService {
                 .ifPresentOrElse(beerToUpdate -> {
                     Beer updatedBeer = beerRepository.save(beerToUpdate.toBuilder()
                             .beerName(beerDto.getBeerName())
-                            .beerStyle(beerDto.getBeerStyle())
+                            .beerStyle(BeerStyle.valueOf(beerDto.getBeerStyle()))
                             .price(beerDto.getPrice())
                             .quantityOnHand(beerDto.getQuantityOnHand())
                             .upc(beerDto.getUpc())
@@ -74,7 +75,7 @@ public class BeerServiceImpl implements BeerService {
         if (StringUtils.hasText(beerDto.getBeerName()))
             builder.beerName(beerDto.getBeerName());
         if (beerDto.getBeerStyle() != null)
-            builder.beerStyle(beerDto.getBeerStyle());
+            builder.beerStyle(BeerStyle.valueOf(beerDto.getBeerStyle()));
         if (beerDto.getPrice() != null)
             builder.price(beerDto.getPrice());
         if (beerDto.getQuantityOnHand() != null)
