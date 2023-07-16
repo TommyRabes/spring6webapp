@@ -2,7 +2,10 @@ package mg.tommy.springboot.springbootwebapp.controller.api;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Customer;
+import mg.tommy.springboot.springbootwebapp.dto.BeerDto;
 import mg.tommy.springboot.springbootwebapp.dto.CustomerDto;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.CustomerRepository;
 import org.junit.jupiter.api.Test;
@@ -11,12 +14,17 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.Rollback;
+import org.springframework.transaction.TransactionSystemException;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -98,6 +106,39 @@ class CustomerApiControllerIT {
         assertThat(savedCustomer.getUpdateDate()).isNotNull();
     }
 
+    @Transactional(transactionManager = "embeddedTransactionManager", propagation = Propagation.NOT_SUPPORTED)
+    @Rollback
+    @Test
+    public void saveCustomerWithoutRequiredFieldsTest() {
+        CustomerDto customerDto = CustomerDto.builder().build();
+
+        TransactionSystemException transactionSystemException = assertThrows(TransactionSystemException.class, () -> {
+            customerApiController.saveCustomer(customerDto);
+        });
+
+        assertThat(transactionSystemException.getCause().getCause()).isInstanceOf(ConstraintViolationException.class);
+        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).matches(customerEntityConstraintViolation(2, 2, 2, 1));
+    }
+
+    @Transactional(transactionManager = "embeddedTransactionManager", propagation = Propagation.NOT_SUPPORTED)
+    @Rollback
+    @Test
+    public void saveCustomerWithInvalidFieldsTest() {
+        CustomerDto customerDto = CustomerDto.builder()
+                .firstName("to")
+                .lastName("too large name".repeat(20))
+                .email("notanemailvalue")
+                .birthdate(LocalDate.now().minusYears(18).plus(1, ChronoUnit.DAYS))
+                .build();
+
+        TransactionSystemException transactionSystemException = assertThrows(TransactionSystemException.class, () -> {
+            customerApiController.saveCustomer(customerDto);
+        });
+
+        assertThat(transactionSystemException.getCause().getCause()).isInstanceOf(ConstraintViolationException.class);
+        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).matches(customerEntityConstraintViolation(1, 1, 1, 1));
+    }
+
     @Transactional("embeddedTransactionManager")
     @Rollback
     @Test
@@ -123,6 +164,43 @@ class CustomerApiControllerIT {
         assertThat(updatedCustomer.getCreatedDate()).isNotNull();
         assertThat(updatedCustomer.getUpdateDate()).isNotNull();
         assertThat(updatedCustomer.getUpdateDate()).isNotEqualTo(customerToUdpate.getUpdateDate());
+    }
+
+    @Transactional(transactionManager = "embeddedTransactionManager", propagation = Propagation.NOT_SUPPORTED)
+    @Rollback
+    @Test
+    public void updateCustomerWithoutRequiredFieldsTest() {
+        Customer customerToUdpate = customerRepository.findAll().get(0);
+        CustomerDto customerDto = CustomerDto.builder()
+                .birthdate(LocalDate.now().minusYears(18))
+                .build();
+
+        TransactionSystemException transactionSystemException = assertThrows(TransactionSystemException.class, () -> {
+            customerApiController.updateCustomer(customerToUdpate.getId(), customerDto);
+        });
+
+        assertThat(transactionSystemException.getCause().getCause()).isInstanceOf(ConstraintViolationException.class);
+        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).matches(customerEntityConstraintViolation(2, 2, 2, 0));
+    }
+
+    @Transactional(transactionManager = "embeddedTransactionManager", propagation = Propagation.NOT_SUPPORTED)
+    @Rollback
+    @Test
+    public void updateCustomerWithInvalidFieldsTest() {
+        Customer customerToUdpate = customerRepository.findAll().get(0);
+        CustomerDto customerDto = CustomerDto.builder()
+                .firstName("to")
+                .lastName("too large name".repeat(20))
+                .email("notanemailvalue")
+                .birthdate(LocalDate.now().minusYears(18).plus(1, ChronoUnit.DAYS))
+                .build();
+
+        TransactionSystemException transactionSystemException = assertThrows(TransactionSystemException.class, () -> {
+            customerApiController.updateCustomer(customerToUdpate.getId(), customerDto);
+        });
+
+        assertThat(transactionSystemException.getCause().getCause()).isInstanceOf(ConstraintViolationException.class);
+        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).matches(customerEntityConstraintViolation(1, 1, 1, 1));
     }
 
     @Transactional("embeddedTransactionManager")
@@ -186,6 +264,23 @@ class CustomerApiControllerIT {
         assertThat(updatedCustomer.getUpdateDate()).isNotEqualTo(customerToPatch.getUpdateDate());
     }
 
+    @Transactional(transactionManager = "embeddedTransactionManager", propagation = Propagation.NOT_SUPPORTED)
+    @Rollback
+    @Test
+    public void patchCustomerWithInvalidFieldsTest() {
+        Customer customerToPatch = customerRepository.findAll().get(0);
+        CustomerDto customerDto = CustomerDto.builder()
+                .lastName("too large name".repeat(20))
+                .email("notanemailvalue")
+                .build();
+
+        TransactionSystemException transactionSystemException = assertThrows(TransactionSystemException.class, () -> {
+            customerApiController.patchCustomer(customerToPatch.getId(), customerDto);
+        });
+
+        assertThat(transactionSystemException.getCause().getCause()).isInstanceOf(ConstraintViolationException.class);
+        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).matches(customerEntityConstraintViolation(0, 1, 1, 0));
+    }
 
     @Transactional("embeddedTransactionManager")
     @Rollback
@@ -195,4 +290,17 @@ class CustomerApiControllerIT {
             customerApiController.patchCustomer(UUID.randomUUID(), mock(CustomerDto.class));
         });
     }
+
+    private Predicate<ConstraintViolationException> customerEntityConstraintViolation(int firstName, int lastName, int email, int birthdate) {
+        return (exception) -> {
+            Set<ConstraintViolation<?>> violations = exception.getConstraintViolations();
+            return violations.size() == firstName + lastName + email + birthdate &&
+                    violations.stream().filter(violation -> "firstName".equals(violation.getPropertyPath().toString())).count() == firstName &&
+                    violations.stream().filter(violation -> "lastName".equals(violation.getPropertyPath().toString())).count() == lastName &&
+                    violations.stream().filter(violation -> "email".equals(violation.getPropertyPath().toString())).count() == email &&
+                    violations.stream().filter(violation -> "birthdate".equals(violation.getPropertyPath().toString())).count() == birthdate;
+
+        };
+    }
+
 }

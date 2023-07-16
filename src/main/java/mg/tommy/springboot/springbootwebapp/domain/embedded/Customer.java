@@ -1,7 +1,12 @@
 package mg.tommy.springboot.springbootwebapp.domain.embedded;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
+import mg.tommy.springboot.springbootwebapp.dto.constraint.validator.Early;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -19,9 +24,28 @@ public class Customer {
     private UUID id;
     @Version
     private Integer version;
+
+    @NotNull
+    @NotBlank
+    @Size(min = 3, max = 100)
+    @Column(length = 100, nullable = false)
     private String firstName;
+
+    @NotNull
+    @NotBlank
+    @Size(min = 3, max = 100)
+    @Column(length = 100, nullable = false)
     private String lastName;
+
+    @NotNull
+    @NotBlank
+    @Size(min = 3, max = 320)
+    @Email
+    @Column(length = 320, nullable = false)
     private String email;
+
+    @NotNull
+    @Early(years = 18)
     private LocalDate birthdate;
     private LocalDateTime createdDate;
     private LocalDateTime updateDate;

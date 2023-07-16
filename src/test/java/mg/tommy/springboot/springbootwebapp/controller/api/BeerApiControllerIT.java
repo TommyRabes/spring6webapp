@@ -2,25 +2,29 @@ package mg.tommy.springboot.springbootwebapp.controller.api;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Beer;
+import mg.tommy.springboot.springbootwebapp.domain.embedded.BeerStyle;
 import mg.tommy.springboot.springbootwebapp.dto.BeerDto;
 import mg.tommy.springboot.springbootwebapp.mapper.BeerMapper;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.BeerRepository;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.Rollback;
+import org.springframework.transaction.TransactionSystemException;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 
 import java.math.BigDecimal;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -96,6 +100,8 @@ class BeerApiControllerIT {
     public void saveBeerTest() {
         BeerDto beerDto = BeerDto.builder()
                 .beerName("New beer")
+                .beerStyle(BeerStyle.SAISON.name())
+                .upc("0535421")
                 .price(new BigDecimal("25.99"))
                 .build();
 
@@ -105,10 +111,69 @@ class BeerApiControllerIT {
         assertThat(responseEntity.getHeaders().getLocation()).isNotNull();
 
         String[] locationUUID = responseEntity.getHeaders().getLocation().getPath().split("/");
-        String generatedUUID = locationUUID[4];
-        Optional<Beer> beerOptional = beerRepository.findById(UUID.fromString(generatedUUID));
+        UUID generatedUUID = UUID.fromString(locationUUID[4]);
+        Optional<Beer> beerOptional = beerRepository.findById(generatedUUID);
 
         assertThat(beerOptional).isNotEmpty();
+        Beer savedBeer = beerOptional.get();
+        assertThat(savedBeer.getId()).isEqualTo(generatedUUID);
+        assertThat(savedBeer.getVersion()).isNotNull();
+        assertThat(savedBeer.getBeerName()).isEqualTo(beerDto.getBeerName());
+        assertThat(savedBeer.getBeerStyle().name()).isEqualTo(beerDto.getBeerStyle());
+        assertThat(savedBeer.getUpc()).isEqualTo(beerDto.getUpc());
+        assertThat(savedBeer.getQuantityOnHand()).isEqualTo(beerDto.getQuantityOnHand());
+        assertThat(savedBeer.getPrice()).isEqualTo(beerDto.getPrice());
+        assertThat(savedBeer.getCreatedDate()).isNotNull();
+        assertThat(savedBeer.getUpdateDate()).isNotNull();
+    }
+
+    /**
+     * In order not to alter the application's real behavior, propagation is set to NOT_SUPPORTED
+     * This way no transaction will be created at this method level
+     * preventing from expanding the transaction scope
+     * resulting in having a ConstraintViolationException nested within a TransactionSystemException
+     * instead of getting directly the ConstraintViolationException bubbled up to the controller
+     * here we want to keep the normal behavior of the webapp in case of an exception
+     * Actually, the @Transactional and @Rollback may be pointless in this case
+     * because flushing occurs earlier and thus, probably commit too (to probe)
+     *
+     * One caveat is what if no exception get thrown while running the test ? (because we're expecting one)
+     * Undesired data will persist in the database without the possibility to rollback
+     * It's okay for this test because we're connecting to an in-memory database
+     * but in a production-ready application and database (MySQL), we wouldn't want that
+     */
+    @Transactional(transactionManager = "embeddedTransactionManager", propagation = Propagation.NOT_SUPPORTED)
+    @Rollback
+    @Test
+    public void saveBeerWithoutRequiredFieldsTest() {
+        BeerDto beerDto = BeerDto.builder().build();
+
+        TransactionSystemException transactionSystemException = assertThrows(TransactionSystemException.class, () -> {
+            beerApiController.saveBeer(beerDto);
+        });
+
+        assertThat(transactionSystemException.getCause().getCause()).isInstanceOf(ConstraintViolationException.class);
+        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).matches(beerEntityConstraintViolation(2, 1, 2, 0, 1));
+    }
+
+    @Transactional(transactionManager = "embeddedTransactionManager", propagation = Propagation.NOT_SUPPORTED)
+    @Rollback
+    @Test
+    public void saveBeerWithInvalidFieldsTest() {
+        BeerDto beerDto = BeerDto.builder()
+                .beerName("be")
+                .beerStyle(BeerStyle.PORTER.name())
+                .upc("up")
+                .quantityOnHand(-1)
+                .price(new BigDecimal("-1"))
+                .build();
+
+        TransactionSystemException transactionSystemException = assertThrows(TransactionSystemException.class, () -> {
+            beerApiController.saveBeer(beerDto);
+        });
+
+        assertThat(transactionSystemException.getCause().getCause()).isInstanceOf(ConstraintViolationException.class);
+        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).matches(beerEntityConstraintViolation(1, 0, 1, 1, 1));
     }
 
     @Transactional("embeddedTransactionManager")
@@ -148,6 +213,47 @@ class BeerApiControllerIT {
         assertThat(updatedBeer.getCreatedDate()).isEqualTo(beer.getCreatedDate());
         assertThat(updatedBeer.getUpdateDate()).isNotNull();
         assertThat(updatedBeer.getUpdateDate()).isNotEqualTo(beer.getUpdateDate());
+    }
+
+    @Transactional(transactionManager = "embeddedTransactionManager", propagation = Propagation.NOT_SUPPORTED)
+    @Rollback
+    @Test
+    public void updateBeerByIdWithoutRequiredFieldsTest() {
+        final String updatedName = "Updated name";
+        Beer beer = beerRepository.findAll().get(0);
+        entityManager.detach(beer);
+
+        BeerDto beerDto = BeerDto.builder().beerName(updatedName).build();
+
+        TransactionSystemException transactionSystemException = assertThrows(TransactionSystemException.class, () -> {
+            beerApiController.updateById(beer.getId(), beerDto);
+        });
+
+        assertThat(transactionSystemException.getCause().getCause()).isInstanceOf(ConstraintViolationException.class);
+        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).matches(beerEntityConstraintViolation(0, 1, 2, 0, 1));
+    }
+
+    @Transactional(transactionManager = "embeddedTransactionManager", propagation = Propagation.NOT_SUPPORTED)
+    @Rollback
+    @Test
+    public void updateBeerByIdWithInvalidFieldsTest() {
+        Beer beer = beerRepository.findAll().get(0);
+        entityManager.detach(beer);
+
+        BeerDto beerDto = BeerDto.builder()
+                .beerName("na")
+                .beerStyle(BeerStyle.LAGER.name())
+                .upc("0123456789".repeat(11))
+                .quantityOnHand(-1)
+                .price(new BigDecimal("-1"))
+                .build();
+
+        TransactionSystemException transactionSystemException = assertThrows(TransactionSystemException.class, () -> {
+            beerApiController.updateById(beer.getId(), beerDto);
+        });
+
+        assertThat(transactionSystemException.getCause().getCause()).isInstanceOf(ConstraintViolationException.class);
+        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).matches(beerEntityConstraintViolation(1, 0, 1, 1, 1));
     }
 
     @Transactional("embeddedTransactionManager")
@@ -207,6 +313,26 @@ class BeerApiControllerIT {
         assertThat(patchedBeer.getUpdateDate()).isNotEqualTo(beerToPatch.getUpdateDate());
     }
 
+    @Transactional(transactionManager = "embeddedTransactionManager", propagation = Propagation.NOT_SUPPORTED)
+    @Rollback
+    @Test
+    public void patchByIdWithInvalidFieldsTest() {
+        Beer beerToPatch = beerRepository.findAll().get(0);
+        entityManager.detach(beerToPatch);
+
+        BeerDto beerForPatch = BeerDto.builder()
+                .beerName("na")
+                .quantityOnHand(-1)
+                .build();
+
+        TransactionSystemException transactionSystemException = assertThrows(TransactionSystemException.class, () -> {
+            beerApiController.patchById(beerToPatch.getId(), beerForPatch);
+        });
+
+        assertThat(transactionSystemException.getCause().getCause()).isInstanceOf(ConstraintViolationException.class);
+        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).matches(beerEntityConstraintViolation(1, 0, 0, 1, 0));
+    }
+
     @Transactional("embeddedTransactionManager")
     @Rollback
     @Test
@@ -214,5 +340,17 @@ class BeerApiControllerIT {
         assertThrows(NotFoundException.class, () -> {
             beerApiController.patchById(UUID.randomUUID(), mock(BeerDto.class));
         });
+    }
+
+    private Predicate<ConstraintViolationException> beerEntityConstraintViolation(int beerName, int beerStyle, int upc, int quantityOnHand, int price) {
+        return (exception) -> {
+            Set<ConstraintViolation<?>> violations = exception.getConstraintViolations();
+            return violations.size() == beerName + beerStyle + upc + quantityOnHand + price &&
+                    violations.stream().filter(violation -> "beerName".equals(violation.getPropertyPath().toString())).count() == beerName &&
+                    violations.stream().filter(violation -> "beerStyle".equals(violation.getPropertyPath().toString())).count() == beerStyle &&
+                    violations.stream().filter(violation -> "upc".equals(violation.getPropertyPath().toString())).count() == upc &&
+                    violations.stream().filter(violation -> "quantityOnHand".equals(violation.getPropertyPath().toString())).count() == quantityOnHand &&
+                    violations.stream().filter(violation -> "price".equals(violation.getPropertyPath().toString())).count() == price;
+        };
     }
 }

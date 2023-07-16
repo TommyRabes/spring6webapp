@@ -52,7 +52,7 @@ public class BeerServiceImpl implements BeerService {
                 .ifPresentOrElse(beerToUpdate -> {
                     Beer updatedBeer = beerRepository.save(beerToUpdate.toBuilder()
                             .beerName(beerDto.getBeerName())
-                            .beerStyle(BeerStyle.valueOf(beerDto.getBeerStyle()))
+                            .beerStyle(beerDto.getBeerStyle())
                             .price(beerDto.getPrice())
                             .quantityOnHand(beerDto.getQuantityOnHand())
                             .upc(beerDto.getUpc())

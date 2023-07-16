@@ -1,5 +1,6 @@
 package mg.tommy.springboot.springbootwebapp.controller.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Customer;
 import mg.tommy.springboot.springbootwebapp.dto.CustomerDto;
@@ -15,9 +16,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.RequestBuilder;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -28,12 +32,13 @@ import static mg.tommy.springboot.springbootwebapp.controller.api.CustomerApiCon
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.util.Lists.list;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.collection.IsIterableWithSize.iterableWithSize;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -73,6 +78,20 @@ class CustomerApiControllerTest {
             .build();
 
     private static final String UUID_PATH = ROOT_PATH + "/{uuid}";
+
+    public static final CustomerDto INVALID_CUSTOMER = CustomerDto.builder()
+            .firstName("to")
+            .lastName("too large name".repeat(20))
+            .email("notanemailvalue")
+            .birthdate(LocalDate.now().minusYears(18).plus(1, ChronoUnit.DAYS))
+            .build();
+
+    public static final Map<String, String> UNDESERIALIZABLE_CUSTOMER = Map.of(
+            "firstName", "to",
+            "lastName", "too large name".repeat(20),
+            "email", "notanemailvalue",
+            "birthdate", "notaparseabledate"
+    );
 
     @Autowired
     MockMvc mockMvc;
@@ -149,10 +168,7 @@ class CustomerApiControllerTest {
 
         given(customerService.save(any(CustomerDto.class))).willReturn(SHERLEY);
 
-        mockMvc.perform(post(ROOT_PATH)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(customerDto)))
+        mockMvc.perform(saveCustomerRequest(customerDto))
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", ROOT_PATH + "/" + SHERLEY.getId()))
                 .andExpect(jsonPath("$.id", is(SHERLEY.getId().toString())))
@@ -160,6 +176,46 @@ class CustomerApiControllerTest {
                 .andExpect(jsonPath("$.lastName", is(SHERLEY.getLastName())))
                 .andExpect(jsonPath("$.email", is(SHERLEY.getEmail())))
                 .andExpect(jsonPath("$.birthdate", is(SHERLEY.getBirthdate().toString())));
+    }
+
+    @Test
+    public void saveCustomerWithoutRequiredFieldsTest() throws Exception {
+        CustomerDto customerDto = CustomerDto.builder().build();
+
+        given(customerService.save(any(CustomerDto.class))).willReturn(SHERLEY);
+
+        mockMvc.perform(saveCustomerRequest(customerDto))
+                .andExpect(status().isBadRequest())
+                .andExpectAll(fieldErrors(2, 2, 2, 1));
+
+        verifyNoInteractions(customerService);
+    }
+
+    @Test
+    public void saveCustomerWithInvalidFieldsTest() throws Exception {
+        given(customerService.save(any(CustomerDto.class))).willReturn(SHERLEY);
+
+        mockMvc.perform(saveCustomerRequest(INVALID_CUSTOMER))
+                .andExpect(status().isBadRequest())
+                .andExpectAll(fieldErrors(1, 1, 1, 1));
+
+        mockMvc.perform(saveCustomerRequest(INVALID_CUSTOMER.toBuilder().birthdate(LocalDate.now().minusYears(18)).build()))
+                .andExpect(status().isBadRequest())
+                .andExpectAll(fieldErrors(1, 1, 1, 0));
+
+        verifyNoInteractions(customerService);
+    }
+
+    @Test
+    public void saveCustomerWithTypeMismatchTest() throws Exception {
+        given(customerService.save(any(CustomerDto.class))).willReturn(SHERLEY);
+
+        mockMvc.perform(saveCustomerRequest(UNDESERIALIZABLE_CUSTOMER))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.type", is("TypeMismatching")))
+                .andExpect(jsonPath("$.message", containsString("conversion failed")));
+
+        verifyNoInteractions(customerService);
     }
 
     @Test
@@ -175,13 +231,46 @@ class CustomerApiControllerTest {
 
         given(customerService.overwriteById(eq(SHERLEY.getId()), eq(customerDto))).willReturn(Optional.of(mock(CustomerDto.class)));
 
-        mockMvc.perform(put(UUID_PATH, SHERLEY.getId())
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(customerDto)))
+        mockMvc.perform(updateCustomerRequest(SHERLEY.getId(), customerDto))
                 .andExpect(status().isNoContent());
 
         verify(customerService).overwriteById(eq(SHERLEY.getId()), eq(customerDto));
+    }
+
+    @Test
+    public void updateCustomerWithoutRequiredFieldsTest() throws Exception {
+        given(customerService.overwriteById(any(UUID.class), any(CustomerDto.class))).willReturn(Optional.of(mock(CustomerDto.class)));
+
+        CustomerDto customerDto = CustomerDto.builder().build();
+
+        mockMvc.perform(updateCustomerRequest(SHERLEY.getId(), customerDto))
+                .andExpect(status().isBadRequest())
+                .andExpectAll(fieldErrors(2, 2, 2, 1));
+
+        verifyNoInteractions(customerService);
+    }
+
+    @Test
+    public void updateCustomerWithInvalidFieldsTest() throws Exception {
+        given(customerService.overwriteById(any(UUID.class), any(CustomerDto.class))).willReturn(Optional.of(mock(CustomerDto.class)));
+
+        mockMvc.perform(updateCustomerRequest(SHERLEY.getId(), INVALID_CUSTOMER))
+                .andExpect(status().isBadRequest())
+                .andExpectAll(fieldErrors(1, 1, 1, 1));
+
+        verifyNoInteractions(customerService);
+    }
+
+    @Test
+    public void updateCustomerWithTypeMismatchTest() throws Exception {
+        given(customerService.overwriteById(any(UUID.class), any(CustomerDto.class))).willReturn(Optional.of(mock(CustomerDto.class)));
+
+        mockMvc.perform(updateCustomerRequest(SHERLEY.getId(), UNDESERIALIZABLE_CUSTOMER))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.type", is("TypeMismatching")))
+                .andExpect(jsonPath("$.message", containsString("conversion failed")));
+
+        verifyNoInteractions(customerService);
     }
 
     @Test
@@ -197,10 +286,7 @@ class CustomerApiControllerTest {
 
         given(customerService.overwriteById(any(UUID.class), eq(customerDto))).willReturn(Optional.empty());
 
-        mockMvc.perform(put(UUID_PATH, UUID.randomUUID())
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(customerDto)))
+        mockMvc.perform(updateCustomerRequest(UUID.randomUUID(), customerDto))
                 .andExpect(status().isNotFound());
 
         verify(customerService).overwriteById(any(UUID.class), eq(customerDto));
@@ -240,15 +326,36 @@ class CustomerApiControllerTest {
 
         given(customerService.updateById(any(UUID.class), any(CustomerDto.class))).willReturn(Optional.of(mock(CustomerDto.class)));
 
-        mockMvc.perform(patch(UUID_PATH, SHERLEY.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(customerMap)))
+        mockMvc.perform(patchCustomerRequest(SHERLEY.getId(), customerMap))
                 .andExpect(status().isNoContent());
 
         verify(customerService).updateById(uuidArgumentCaptor.capture(), customerArgumentCaptor.capture());
 
         assertThat(uuidArgumentCaptor.getValue()).isEqualTo(SHERLEY.getId());
         assertThat(customerArgumentCaptor.getValue()).isEqualTo(customerDto);
+    }
+
+    @Test
+    public void patchCustomerWithInvalidFieldsTest() throws Exception {
+        given(customerService.updateById(any(UUID.class), any(CustomerDto.class))).willReturn(Optional.of(mock(CustomerDto.class)));
+
+        mockMvc.perform(patchCustomerRequest(SHERLEY.getId(), INVALID_CUSTOMER))
+                .andExpect(status().isBadRequest())
+                .andExpectAll(fieldErrors(1, 1, 1, 1));
+
+        verifyNoInteractions(customerService);
+    }
+
+    @Test
+    public void patchCustomerWithTypeMismatchTest() throws Exception {
+        given(customerService.updateById(any(UUID.class), any(CustomerDto.class))).willReturn(Optional.of(mock(CustomerDto.class)));
+
+        mockMvc.perform(patchCustomerRequest(SHERLEY.getId(), UNDESERIALIZABLE_CUSTOMER))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.type", is("TypeMismatching")))
+                .andExpect(jsonPath("$.message", containsString("conversion failed")));
+
+        verifyNoInteractions(customerService);
     }
 
     @Test
@@ -259,14 +366,43 @@ class CustomerApiControllerTest {
 
         given(customerService.updateById(any(UUID.class), any(CustomerDto.class))).willReturn(Optional.empty());
 
-        mockMvc.perform(patch(UUID_PATH, SHERLEY.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(customerMap)))
+        mockMvc.perform(patchCustomerRequest(SHERLEY.getId(), customerMap))
                 .andExpect(status().isNotFound());
 
         verify(customerService).updateById(uuidArgumentCaptor.capture(), customerArgumentCaptor.capture());
 
         assertThat(uuidArgumentCaptor.getValue()).isEqualTo(SHERLEY.getId());
         assertThat(customerArgumentCaptor.getValue()).isEqualTo(customerDto);
+    }
+
+    private RequestBuilder saveCustomerRequest(Object requestBody) throws JsonProcessingException {
+        return post(ROOT_PATH)
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestBody));
+    }
+
+    private RequestBuilder updateCustomerRequest(UUID uuid, Object requestBody) throws JsonProcessingException {
+        return put(UUID_PATH, uuid)
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestBody));
+    }
+
+    private RequestBuilder patchCustomerRequest(UUID uuid, Object requestBody) throws JsonProcessingException {
+        return patch(UUID_PATH, uuid)
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestBody));
+    }
+
+    private ResultMatcher[] fieldErrors(int firstName, int lastName, int email, int birthdate) {
+        return new ResultMatcher[] {
+                jsonPath("$.length()", is(firstName + lastName + email + birthdate)),
+                jsonPath("$..firstName", iterableWithSize(firstName)),
+                jsonPath("$..lastName", iterableWithSize(lastName)),
+                jsonPath("$..email", iterableWithSize(email)),
+                jsonPath("$..birthdate", iterableWithSize(birthdate))
+            };
     }
 }
