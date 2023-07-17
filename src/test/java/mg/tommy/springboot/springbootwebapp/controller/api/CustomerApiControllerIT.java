@@ -5,7 +5,6 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Customer;
-import mg.tommy.springboot.springbootwebapp.dto.BeerDto;
 import mg.tommy.springboot.springbootwebapp.dto.CustomerDto;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.CustomerRepository;
 import org.junit.jupiter.api.Test;
@@ -20,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;

@@ -32,7 +32,7 @@ import java.util.Objects;
 )
 public class PersistentDatabaseConfig {
 
-    @Profile("default")
+    @Profile("MySQL")
     @Bean("persistentDataSourceProperties")
     @ConfigurationProperties(prefix = "spring.datasource.persistent")
     public DataSourceProperties persistentDataSourceProperties() {
@@ -84,7 +84,7 @@ public class PersistentDatabaseConfig {
         return new JdbcTemplate(persistentDateSource);
     }
 
-    @Profile("default")
+    @Profile("MySQL")
     @Bean("persistentJPAProperties")
     public Map<String, String> mysqlPropertiesMap() {
         // Trying to mimic Spring Boot's default configuration
