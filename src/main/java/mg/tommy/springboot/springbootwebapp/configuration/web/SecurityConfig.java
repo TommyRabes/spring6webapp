@@ -2,7 +2,8 @@ package mg.tommy.springboot.springbootwebapp.configuration.web;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
+import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -28,6 +29,28 @@ public class SecurityConfig {
         return web -> web.ignoring().requestMatchers(new AntPathRequestMatcher("/console/**"));
     }
 
+    @Profile("H2")
+    @Bean
+    @Order(1)
+    public SecurityFilterChain h2FilterChain(HttpSecurity securityBuilder) throws Exception {
+        securityBuilder
+                .securityMatcher(toH2Console())
+                .authorizeHttpRequests(requests -> requests
+                        .requestMatchers(toH2Console()).permitAll()
+                )
+                // Allows access to H2 console without Spring Security extra checks
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers(toH2Console())
+                        // csrf protection is activated by default, but it's safe to disable for REST endpoints
+                        // see: https://stackoverflow.com/questions/19468209/spring-security-configuration-http-403-error
+                        // and https://spring.io/blog/2013/08/21/spring-security-3-2-0-rc1-highlights-csrf-protection
+                        .ignoringRequestMatchers("/plans", "/plans/**")
+                        .ignoringRequestMatchers("/api/**"))
+                .headers(headers -> headers.frameOptions(frameOptionsConfig -> frameOptionsConfig.sameOrigin()));
+
+        return securityBuilder.build();
+    }
+
     @Bean
     public SecurityFilterChain routeAccessFilterChain(HttpSecurity securityBuilder) throws Exception {
         securityBuilder
@@ -51,7 +74,6 @@ public class SecurityConfig {
                         // in an @ExceptionHandler annotated method
                         // This check is performed earlier in the FilterChain
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers(toH2Console()).permitAll()
                         //.hasRole("ADMIN")
                         // lockdown any other request
                         .anyRequest().permitAll()
@@ -68,9 +90,7 @@ public class SecurityConfig {
                 // since we've called anyRequest().authenticated()
                 .logout(configurer -> configurer.logoutSuccessUrl("/login?logout").permitAll())
 
-                // Allows access to H2 console without Spring Security extra checks
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers(toH2Console())
                         // csrf protection is activated by default, but it's safe to disable for REST endpoints
                         // see: https://stackoverflow.com/questions/19468209/spring-security-configuration-http-403-error
                         // and https://spring.io/blog/2013/08/21/spring-security-3-2-0-rc1-highlights-csrf-protection

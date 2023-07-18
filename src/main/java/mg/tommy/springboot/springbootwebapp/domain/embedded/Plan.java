@@ -10,7 +10,7 @@ import java.util.Set;
 @AllArgsConstructor
 @RequiredArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@Entity
+@Entity(name = "traveling_plan")
 public class Plan {
 
     @Id

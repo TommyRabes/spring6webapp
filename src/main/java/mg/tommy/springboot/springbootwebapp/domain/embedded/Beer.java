@@ -25,7 +25,7 @@ public class Beer {
     // The verbose approach:
     // @GeneratedValue(strategy = GenerationType.UUID)
     // @GenericGenerator(name = "UUID", type = UUIDGenerator.class)
-    // @Column(length = 36, columnDefinition = "varchar", updatable = false, nullable = false, unique = true)
+    // @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false, unique = true)
 
     // Single annotation approach
     // @UuidGenerator

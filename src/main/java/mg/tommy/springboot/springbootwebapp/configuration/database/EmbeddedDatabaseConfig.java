@@ -33,7 +33,7 @@ import java.util.Objects;
 )
 public class EmbeddedDatabaseConfig {
 
-    @Profile("default")
+    @Profile("H2")
     @Bean("embeddedDataSourceProperties")
     @ConfigurationProperties(prefix = "spring.datasource.embedded")
     public DataSourceProperties embeddedDataSourceProperties() {
@@ -88,7 +88,7 @@ public class EmbeddedDatabaseConfig {
         return new JdbcTemplate(embeddedDateSource);
     }
 
-    @Profile("default")
+    @Profile("H2")
     @Bean("embeddedJPAProperties")
     public Map<String, String> h2PropertyMap() {
         // Trying to mimic Spring Boot's default configuration
@@ -111,6 +111,7 @@ public class EmbeddedDatabaseConfig {
         // Trying to mimic Spring Boot's default configuration
         Map<String, String> propertiesMap = new HashMap<>();
         propertiesMap.put("hibernate.dialect", "org.hibernate.dialect.SQLServerDialect");
+        propertiesMap.put("hibernate.default_schema", "dbo");
         propertiesMap.put("hibernate.hbm2ddl.auto", "create-drop");
         // To implement to custom naming strategy, see https://vladmihalcea.com/hibernate-physical-naming-strategy/
         propertiesMap.put("hibernate.physical_naming_strategy", "org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy");
