@@ -10,7 +10,7 @@ import java.util.Set;
 @AllArgsConstructor
 @RequiredArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@Entity(name = "traveling_plan")
+@Entity(name = "traveling_plan") // "plan" is a SQL Server reserved-word
 public class Plan {
 
     @Id

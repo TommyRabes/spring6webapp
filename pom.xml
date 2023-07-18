@@ -160,6 +160,7 @@
 			</dependencies>
 			<properties>
 				<spring.database.profiles>h2-pg</spring.database.profiles>
+				<spring.database.init.platform>h2</spring.database.init.platform>
 			</properties>
 			<activation>
 				<activeByDefault>true</activeByDefault>
@@ -181,6 +182,7 @@
 			</dependencies>
 			<properties>
 				<spring.database.profiles>h2-mysql</spring.database.profiles>
+				<spring.database.init.platform>h2</spring.database.init.platform>
 			</properties>
 		</profile>
 
@@ -199,6 +201,7 @@
 			</dependencies>
 			<properties>
 				<spring.database.profiles>mssql-pg</spring.database.profiles>
+				<spring.database.init.platform>mssql</spring.database.init.platform>
 			</properties>
 		</profile>
 
@@ -217,6 +220,7 @@
 			</dependencies>
 			<properties>
 				<spring.database.profiles>mssql-mysql</spring.database.profiles>
+				<spring.database.init.platform>mssql</spring.database.init.platform>
 			</properties>
 		</profile>
 	</profiles>
