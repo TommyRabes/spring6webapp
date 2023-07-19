@@ -112,7 +112,7 @@ public class EmbeddedDatabaseConfig {
         Map<String, String> propertiesMap = new HashMap<>();
         propertiesMap.put("hibernate.dialect", "org.hibernate.dialect.SQLServerDialect");
         propertiesMap.put("hibernate.default_schema", "dbo");
-        propertiesMap.put("hibernate.hbm2ddl.auto", "create-drop");
+        // propertiesMap.put("hibernate.hbm2ddl.auto", "create-drop");
         // To implement to custom naming strategy, see https://vladmihalcea.com/hibernate-physical-naming-strategy/
         propertiesMap.put("hibernate.physical_naming_strategy", "org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy");
         propertiesMap.put("hibernate.show_sql", "false");
@@ -120,6 +120,11 @@ public class EmbeddedDatabaseConfig {
         propertiesMap.put("hibernate.use_sql_comments", "false");
         propertiesMap.put("hibernate.generate_statistics", "false");
         propertiesMap.put("javax.persistence.sharedCache.mode", "ENABLE_SELECTIVE");
+        propertiesMap.put("jakarta.persistence.schema-generation.database.action", "drop-and-create");
+        propertiesMap.put("jakarta.persistence.schema-generation.scripts.action", "drop-and-create");
+        propertiesMap.put("jakarta.persistence.schema-generation.scripts.create-source", "metadata");
+        propertiesMap.put("jakarta.persistence.schema-generation.scripts.drop-target", "mssql-drop-and-create.sql");
+        propertiesMap.put("jakarta.persistence.schema-generation.scripts.create-target", "mssql-drop-and-create.sql");
         return propertiesMap;
     }
 
