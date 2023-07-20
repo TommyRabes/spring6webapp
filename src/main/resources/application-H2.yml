@@ -1,0 +1,10 @@
+spring:
+  jpa:
+    h2:
+      hibernate:
+        hbm2ddlAuto: create-drop
+        physical_naming_strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        show_sql: false
+        format_sql: false
+        use_sql_comments: false
+        generate_statistics: false

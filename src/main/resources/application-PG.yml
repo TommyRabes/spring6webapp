@@ -1,0 +1,16 @@
+spring:
+  jpa:
+    pg:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        physical_naming_strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        show_sql: false
+        format_sql: false
+        use_sql_comments: false
+        generate_statistics: false
+      properties:
+        databaseAction: drop-and-create
+        scriptsAction: drop-and-create
+        scriptsCreateSource: metadata
+        scriptsDropTarget: pg-drop-and-create.sql
+        scriptsCreateTarget: pg-drop-and-create.sql

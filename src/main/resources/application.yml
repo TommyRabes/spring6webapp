@@ -43,7 +43,7 @@ spring:
   mail:
     host: smtp.gmail.com
     username: rabesalama.tommy@gmail.com
-    password: tommy17andritiana27rabesalama897
+    password: EqHVbDQMn4s:6b5
     port: 587
     properties:
       mail:

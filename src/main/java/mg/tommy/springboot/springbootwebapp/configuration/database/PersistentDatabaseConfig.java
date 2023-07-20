@@ -1,5 +1,7 @@
 package mg.tommy.springboot.springbootwebapp.configuration.database;
 
+import mg.tommy.springboot.springbootwebapp.configuration.database.property.HibernateJpaProperties;
+import mg.tommy.springboot.springbootwebapp.configuration.database.property.JpaSchemaProperties;
 import mg.tommy.springboot.springbootwebapp.domain.persistent.User;
 import mg.tommy.springboot.springbootwebapp.repository.persistent.UserRepository;
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -56,7 +58,7 @@ public class PersistentDatabaseConfig {
     public LocalContainerEntityManagerFactoryBean persistentEntityManagerFactory(
             @Qualifier("persistentDataSource") DataSource dataSource,
             EntityManagerFactoryBuilder builder,
-            @Qualifier("persistentJPAPropertyMap") Map<String, String> propertyMap) {
+            @Qualifier("persistentJPAPropertyMap") Map<String, Map<String, Object>> propertyMap) {
         LocalContainerEntityManagerFactoryBean entityManagerFactory = builder
                 .dataSource(dataSource)
                 .persistenceUnit("Persistent")
@@ -64,7 +66,7 @@ public class PersistentDatabaseConfig {
                 .build();
 
         entityManagerFactory.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
-        entityManagerFactory.setJpaPropertyMap(propertyMap);
+        entityManagerFactory.setJpaPropertyMap(propertyMap.get("persistentJPAPropertyMap"));
         entityManagerFactory.setPersistenceProviderClass(HibernatePersistenceProvider.class);
 
         Objects.requireNonNull(entityManagerFactory.getPersistenceProvider()).generateSchema("Persistent", entityManagerFactory.getJpaPropertyMap());
@@ -84,59 +86,41 @@ public class PersistentDatabaseConfig {
         return new JdbcTemplate(persistentDateSource);
     }
 
-    @Profile("MySQL")
-    @Bean("persistentJPAPropertyMap")
-    public Map<String, String> mysqlPropertiesMap() {
-        // Trying to mimic Spring Boot's default configuration
-        Map<String, String> propertiesMap = new HashMap<>();
-        // Spring Boot can't guess the appropriate Hibernate Dialect, so I need to specify it explicitly
-        propertiesMap.put("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
-
-        // Should be 'create' at first and then 'update' for a non-in-memory database like MySQL
-        // propertiesMap.put("hibernate.hbm2ddl.auto", "create-drop");
-        // To implement to custom naming strategy, see https://vladmihalcea.com/hibernate-physical-naming-strategy/
-        propertiesMap.put("hibernate.physical_naming_strategy", "org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy");
-        propertiesMap.put("hibernate.show_sql", "false");
-        propertiesMap.put("hibernate.format_sql", "false");
-        propertiesMap.put("hibernate.use_sql_comments", "false");
-        propertiesMap.put("hibernate.generate_statistics", "false");
-        propertiesMap.put("javax.persistence.sharedCache.mode", "ENABLE_SELECTIVE");
-        // As stated in this article: https://vladmihalcea.com/hibernate-hbm2ddl-auto-schema/#:~:text=The%20hibernate.-,hbm2ddl.,managing%20the%20underlying%20database%20schema.
-        // Hibernate's 'hibernate.hbm2ddl.auto' property has been standardized by JPA
-        // Therefore, we can use JPA's properties instead:
-        // - 'jakarta.persistence.schema-generation.database.action': to apply the schema migration against the database
-        // - 'jakarta.persistence.schema-generation.scripts.action': to generate the schema migration DDL statements to a file
-        propertiesMap.put("jakarta.persistence.schema-generation.database.action", "drop-and-create");
-        propertiesMap.put("jakarta.persistence.schema-generation.scripts.action", "drop-and-create");
-        propertiesMap.put("jakarta.persistence.schema-generation.scripts.create-source", "metadata");
-        propertiesMap.put("jakarta.persistence.schema-generation.scripts.drop-target", "mysql-drop-and-create.sql");
-        propertiesMap.put("jakarta.persistence.schema-generation.scripts.create-target", "mysql-drop-and-create.sql");
-        return propertiesMap;
+    @Profile("PG")
+    @Bean("persistentHibernateProperties")
+    @ConfigurationProperties(prefix = "spring.jpa.pg.hibernate")
+    public HibernateJpaProperties pgHibernateJpaProperties() {
+        return new HibernateJpaProperties();
     }
 
     @Profile("PG")
-    @Bean("persistentJPAProperties")
-    public Map<String, String> postgresPropertiesMap() {
-        // Trying to mimic Spring Boot's default configuration
-        Map<String, String> propertiesMap = new HashMap<>();
-        // Spring Boot can't guess the appropriate Hibernate Dialect, so I need to specify it explicitly
-        propertiesMap.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
+    @Bean("persistentJpaProperties")
+    @ConfigurationProperties(prefix = "spring.jpa.pg.properties")
+    public JpaSchemaProperties pgJpaSchemaProperties() {
+        return new JpaSchemaProperties();
+    }
 
-        // Should be 'create' at first and then 'update' for a non-in-memory database like MySQL
-        // propertiesMap.put("hibernate.hbm2ddl.auto", "create-drop");
-        // To implement to custom naming strategy, see https://vladmihalcea.com/hibernate-physical-naming-strategy/
-        propertiesMap.put("hibernate.physical_naming_strategy", "org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy");
-        propertiesMap.put("hibernate.show_sql", "false");
-        propertiesMap.put("hibernate.format_sql", "false");
-        propertiesMap.put("hibernate.use_sql_comments", "false");
-        propertiesMap.put("hibernate.generate_statistics", "false");
-        propertiesMap.put("javax.persistence.sharedCache.mode", "ENABLE_SELECTIVE");
-        propertiesMap.put("jakarta.persistence.schema-generation.database.action", "drop-and-create");
-        propertiesMap.put("jakarta.persistence.schema-generation.scripts.action", "drop-and-create");
-        propertiesMap.put("jakarta.persistence.schema-generation.scripts.create-source", "metadata");
-        propertiesMap.put("jakarta.persistence.schema-generation.scripts.drop-target", "mysql-drop-and-create.sql");
-        propertiesMap.put("jakarta.persistence.schema-generation.scripts.create-target", "mysql-drop-and-create.sql");
-        return propertiesMap;
+    @Profile("MySQL")
+    @Bean("persistentHibernateProperties")
+    @ConfigurationProperties(prefix = "spring.jpa.mysql.hibernate")
+    public HibernateJpaProperties mysqlHibernateJpaProperties() {
+        return new HibernateJpaProperties();
+    }
+
+    @Profile("MySQL")
+    @Bean("persistentJpaProperties")
+    @ConfigurationProperties(prefix = "spring.jpa.mysql.properties")
+    public JpaSchemaProperties mysqlJpaSchemaProperties() {
+        return new JpaSchemaProperties();
+    }
+
+    @Bean
+    public Map<String, Object> persistentJPAPropertyMap(HibernateJpaProperties persistentHibernateProperties, JpaSchemaProperties persistentJpaProperties) {
+        Map<String, Object> jpaPropertyMap = persistentHibernateProperties.jpaPropertyMap();
+        jpaPropertyMap.put("javax.persistence.sharedCache.mode", "ENABLE_SELECTIVE");
+        jpaPropertyMap.putAll(persistentJpaProperties.jpaPropertyMap());
+
+        return jpaPropertyMap;
     }
 
 }

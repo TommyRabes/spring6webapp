@@ -1,0 +1,22 @@
+spring:
+  jpa:
+    mysql:
+      hibernate:
+        # Spring Boot can't guess the appropriate Hibernate Dialect, so I need to specify it explicitly
+        dialect: org.hibernate.dialect.MySQLDialect
+        physical_naming_strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        show_sql: false
+        format_sql: false
+        use_sql_comments: false
+        generate_statistics: false
+      properties:
+        # As stated in this article: https://vladmihalcea.com/hibernate-hbm2ddl-auto-schema/#:~:text=The%20hibernate.-,hbm2ddl.,managing%20the%20underlying%20database%20schema.
+        # Hibernate's 'hibernate.hbm2ddl.auto' property has been standardized by JPA
+        # Therefore, we can use JPA's properties instead:
+        # - 'jakarta.persistence.schema-generation.database.action': to apply the schema migration against the database
+        # - 'jakarta.persistence.schema-generation.scripts.action': to generate the schema migration DDL statements to a file
+        databaseAction: drop-and-create
+        scriptsAction: drop-and-create
+        scriptsCreateSource: metadata
+        scriptsDropTarget: mysql-drop-and-create.sql
+        scriptsCreateTarget: mysql-drop-and-create.sql

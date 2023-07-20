@@ -61,7 +61,9 @@ public class EmbeddedDatabaseConfig {
     public LocalContainerEntityManagerFactoryBean embeddedEntityManagerFactory(
             @Qualifier("embeddedDataSource") DataSource embeddedDataSource,
             EntityManagerFactoryBuilder builder,
-            @Qualifier("embeddedJPAPropertyMap") Map<String, String> propertyMap
+            // It's odd but when we inject a Map with Object types as value type
+            // we get a Map with a single key (the qualifier) mapped to the desired bean
+            @Qualifier("embeddedJPAPropertyMap") Map<String, Map<String, Object>> propertyMap
     ) {
         LocalContainerEntityManagerFactoryBean entityManagerFactory = builder
                 .dataSource(embeddedDataSource)
@@ -70,7 +72,7 @@ public class EmbeddedDatabaseConfig {
                 .build();
 
         entityManagerFactory.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
-        entityManagerFactory.setJpaPropertyMap(propertyMap);
+        entityManagerFactory.setJpaPropertyMap(propertyMap.get("embeddedJPAPropertyMap"));
         entityManagerFactory.setPersistenceProviderClass(HibernatePersistenceProvider.class);
 
         Objects.requireNonNull(entityManagerFactory.getPersistenceProvider()).generateSchema("Embedded", entityManagerFactory.getJpaPropertyMap());
@@ -104,23 +106,6 @@ public class EmbeddedDatabaseConfig {
         return new JpaSchemaProperties();
     }
 
-    @Profile("H2")
-    @Bean("embeddedJPAPropertyMap")
-    public Map<String, String> h2PropertyMap(HibernateJpaProperties hibernateJpaProperties, JpaSchemaProperties jpaSchemaProperties) {
-        // Trying to mimic Spring Boot's default configuration
-        Map<String, String> propertiesMap = new HashMap<>();
-        // propertiesMap.put("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-        propertiesMap.put("hibernate.hbm2ddl.auto", "create-drop");
-        // To implement to custom naming strategy, see https://vladmihalcea.com/hibernate-physical-naming-strategy/
-        propertiesMap.put("hibernate.physical_naming_strategy", "org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy");
-        propertiesMap.put("hibernate.show_sql", "false");
-        propertiesMap.put("hibernate.format_sql", "false");
-        propertiesMap.put("hibernate.use_sql_comments", "false");
-        propertiesMap.put("hibernate.generate_statistics", "false");
-        propertiesMap.put("javax.persistence.sharedCache.mode", "ENABLE_SELECTIVE");
-        return propertiesMap;
-    }
-
     @Profile("MSSQL")
     @Bean("embeddedHibernateProperties")
     @ConfigurationProperties(prefix = "spring.jpa.mssql.hibernate")
@@ -135,27 +120,13 @@ public class EmbeddedDatabaseConfig {
         return new JpaSchemaProperties();
     }
 
-    @Profile("MSSQL")
-    @Bean("embeddedJPAPropertyMap")
-    public Map<String, String> mssqlPropertyMap(HibernateJpaProperties hibernateJpaProperties, JpaSchemaProperties jpaSchemaProperties) {
-        // Trying to mimic Spring Boot's default configuration
-        Map<String, String> propertiesMap = new HashMap<>();
-        propertiesMap.put("hibernate.dialect", "org.hibernate.dialect.SQLServerDialect");
-        propertiesMap.put("hibernate.default_schema", "dbo");
-        // propertiesMap.put("hibernate.hbm2ddl.auto", "create-drop");
-        // To implement to custom naming strategy, see https://vladmihalcea.com/hibernate-physical-naming-strategy/
-        propertiesMap.put("hibernate.physical_naming_strategy", "org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy");
-        propertiesMap.put("hibernate.show_sql", "false");
-        propertiesMap.put("hibernate.format_sql", "false");
-        propertiesMap.put("hibernate.use_sql_comments", "false");
-        propertiesMap.put("hibernate.generate_statistics", "false");
-        propertiesMap.put("javax.persistence.sharedCache.mode", "ENABLE_SELECTIVE");
-        propertiesMap.put("jakarta.persistence.schema-generation.database.action", "drop-and-create");
-        propertiesMap.put("jakarta.persistence.schema-generation.scripts.action", "drop-and-create");
-        propertiesMap.put("jakarta.persistence.schema-generation.scripts.create-source", "metadata");
-        propertiesMap.put("jakarta.persistence.schema-generation.scripts.drop-target", "mssql-drop-and-create.sql");
-        propertiesMap.put("jakarta.persistence.schema-generation.scripts.create-target", "mssql-drop-and-create.sql");
-        return propertiesMap;
+    @Bean
+    public Map<String, Object> embeddedJPAPropertyMap(HibernateJpaProperties embeddedHibernateProperties, JpaSchemaProperties embeddedJpaProperties) {
+        Map<String, Object> jpaPropertyMap = embeddedHibernateProperties.jpaPropertyMap();
+        jpaPropertyMap.put("javax.persistence.sharedCache.mode", "ENABLE_SELECTIVE");
+        jpaPropertyMap.putAll(embeddedJpaProperties.jpaPropertyMap());
+
+        return jpaPropertyMap;
     }
 
 }
