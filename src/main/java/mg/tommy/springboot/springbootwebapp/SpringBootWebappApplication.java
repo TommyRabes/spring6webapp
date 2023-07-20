@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServic
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-@EnableConfigurationProperties
+@EnableConfigurationProperties()
 @SpringBootApplication(
 		exclude = {SecurityAutoConfiguration.class, UserDetailsServiceAutoConfiguration.class},
 		scanBasePackageClasses = {FullProfile.class}

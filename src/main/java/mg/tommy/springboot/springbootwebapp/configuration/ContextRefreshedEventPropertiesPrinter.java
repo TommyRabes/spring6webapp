@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 
+import static java.util.function.Predicate.not;
+
 @Slf4j
 @Component
 public class ContextRefreshedEventPropertiesPrinter {
@@ -22,6 +24,7 @@ public class ContextRefreshedEventPropertiesPrinter {
                 .filter(ps -> ps instanceof MapPropertySource && (ps.getName().contains("application.properties") || ps.getName().contains("application.yml")))
                 .map(ps -> ((MapPropertySource) ps).getSource().keySet())
                 .flatMap(Collection::stream)
+                .filter(not("spring.mail.password"::equals))
                 .distinct()
                 .sorted()
                 .forEach(key -> log.info("{}={}", key, env.getProperty(key)));

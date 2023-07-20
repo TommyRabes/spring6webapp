@@ -39,13 +39,7 @@ public class SecurityConfig {
                         .requestMatchers(toH2Console()).permitAll()
                 )
                 // Allows access to H2 console without Spring Security extra checks
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers(toH2Console())
-                        // csrf protection is activated by default, but it's safe to disable for REST endpoints
-                        // see: https://stackoverflow.com/questions/19468209/spring-security-configuration-http-403-error
-                        // and https://spring.io/blog/2013/08/21/spring-security-3-2-0-rc1-highlights-csrf-protection
-                        .ignoringRequestMatchers("/plans", "/plans/**")
-                        .ignoringRequestMatchers("/api/**"))
+                .csrf(csrf -> csrf.ignoringRequestMatchers(toH2Console()))
                 .headers(headers -> headers.frameOptions(frameOptionsConfig -> frameOptionsConfig.sameOrigin()));
 
         return securityBuilder.build();

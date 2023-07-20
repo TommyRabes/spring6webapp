@@ -1,5 +1,7 @@
 package mg.tommy.springboot.springbootwebapp.configuration.database;
 
+import mg.tommy.springboot.springbootwebapp.configuration.database.property.HibernateJpaProperties;
+import mg.tommy.springboot.springbootwebapp.configuration.database.property.JpaSchemaProperties;
 import mg.tommy.springboot.springbootwebapp.domain.embedded.Post;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.PostRepository;
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -59,7 +61,7 @@ public class EmbeddedDatabaseConfig {
     public LocalContainerEntityManagerFactoryBean embeddedEntityManagerFactory(
             @Qualifier("embeddedDataSource") DataSource embeddedDataSource,
             EntityManagerFactoryBuilder builder,
-            @Qualifier("embeddedJPAProperties") Map<String, String> propertyMap
+            @Qualifier("embeddedJPAPropertyMap") Map<String, String> propertyMap
     ) {
         LocalContainerEntityManagerFactoryBean entityManagerFactory = builder
                 .dataSource(embeddedDataSource)
@@ -89,8 +91,22 @@ public class EmbeddedDatabaseConfig {
     }
 
     @Profile("H2")
-    @Bean("embeddedJPAProperties")
-    public Map<String, String> h2PropertyMap() {
+    @Bean("embeddedHibernateProperties")
+    @ConfigurationProperties(prefix = "spring.jpa.h2.hibernate")
+    public HibernateJpaProperties h2HibernateJpaProperties() {
+        return new HibernateJpaProperties();
+    }
+
+    @Profile("H2")
+    @Bean("embeddedJpaProperties")
+    @ConfigurationProperties(prefix = "spring.jpa.h2.properties")
+    public JpaSchemaProperties h2JpaSchemaProperties() {
+        return new JpaSchemaProperties();
+    }
+
+    @Profile("H2")
+    @Bean("embeddedJPAPropertyMap")
+    public Map<String, String> h2PropertyMap(HibernateJpaProperties hibernateJpaProperties, JpaSchemaProperties jpaSchemaProperties) {
         // Trying to mimic Spring Boot's default configuration
         Map<String, String> propertiesMap = new HashMap<>();
         // propertiesMap.put("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
@@ -106,8 +122,22 @@ public class EmbeddedDatabaseConfig {
     }
 
     @Profile("MSSQL")
-    @Bean("embeddedJPAProperties")
-    public Map<String, String> mssqlPropertyMap() {
+    @Bean("embeddedHibernateProperties")
+    @ConfigurationProperties(prefix = "spring.jpa.mssql.hibernate")
+    public HibernateJpaProperties mssqlHibernateJpaProperties() {
+        return new HibernateJpaProperties();
+    }
+
+    @Profile("MSSQL")
+    @Bean("embeddedJpaProperties")
+    @ConfigurationProperties(prefix = "spring.jpa.mssql.properties")
+    public JpaSchemaProperties mssqlJpaSchemaProperties() {
+        return new JpaSchemaProperties();
+    }
+
+    @Profile("MSSQL")
+    @Bean("embeddedJPAPropertyMap")
+    public Map<String, String> mssqlPropertyMap(HibernateJpaProperties hibernateJpaProperties, JpaSchemaProperties jpaSchemaProperties) {
         // Trying to mimic Spring Boot's default configuration
         Map<String, String> propertiesMap = new HashMap<>();
         propertiesMap.put("hibernate.dialect", "org.hibernate.dialect.SQLServerDialect");

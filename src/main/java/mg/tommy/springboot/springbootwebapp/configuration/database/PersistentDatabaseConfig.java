@@ -56,7 +56,7 @@ public class PersistentDatabaseConfig {
     public LocalContainerEntityManagerFactoryBean persistentEntityManagerFactory(
             @Qualifier("persistentDataSource") DataSource dataSource,
             EntityManagerFactoryBuilder builder,
-            @Qualifier("persistentJPAProperties") Map<String, String> propertyMap) {
+            @Qualifier("persistentJPAPropertyMap") Map<String, String> propertyMap) {
         LocalContainerEntityManagerFactoryBean entityManagerFactory = builder
                 .dataSource(dataSource)
                 .persistenceUnit("Persistent")
@@ -85,7 +85,7 @@ public class PersistentDatabaseConfig {
     }
 
     @Profile("MySQL")
-    @Bean("persistentJPAProperties")
+    @Bean("persistentJPAPropertyMap")
     public Map<String, String> mysqlPropertiesMap() {
         // Trying to mimic Spring Boot's default configuration
         Map<String, String> propertiesMap = new HashMap<>();
@@ -123,7 +123,7 @@ public class PersistentDatabaseConfig {
         propertiesMap.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
 
         // Should be 'create' at first and then 'update' for a non-in-memory database like MySQL
-        propertiesMap.put("hibernate.hbm2ddl.auto", "create-drop");
+        // propertiesMap.put("hibernate.hbm2ddl.auto", "create-drop");
         // To implement to custom naming strategy, see https://vladmihalcea.com/hibernate-physical-naming-strategy/
         propertiesMap.put("hibernate.physical_naming_strategy", "org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy");
         propertiesMap.put("hibernate.show_sql", "false");
@@ -131,6 +131,11 @@ public class PersistentDatabaseConfig {
         propertiesMap.put("hibernate.use_sql_comments", "false");
         propertiesMap.put("hibernate.generate_statistics", "false");
         propertiesMap.put("javax.persistence.sharedCache.mode", "ENABLE_SELECTIVE");
+        propertiesMap.put("jakarta.persistence.schema-generation.database.action", "drop-and-create");
+        propertiesMap.put("jakarta.persistence.schema-generation.scripts.action", "drop-and-create");
+        propertiesMap.put("jakarta.persistence.schema-generation.scripts.create-source", "metadata");
+        propertiesMap.put("jakarta.persistence.schema-generation.scripts.drop-target", "mysql-drop-and-create.sql");
+        propertiesMap.put("jakarta.persistence.schema-generation.scripts.create-target", "mysql-drop-and-create.sql");
         return propertiesMap;
     }
 
