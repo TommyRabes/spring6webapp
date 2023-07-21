@@ -1,11 +1,10 @@
 package mg.tommy.springboot.springbootwebapp.controller.api;
 
-import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import mg.tommy.springboot.springbootwebapp.dto.BeerDto;
-import mg.tommy.springboot.springbootwebapp.dto.constraint.group.BeerGroup;
-import mg.tommy.springboot.springbootwebapp.dto.constraint.group.PartialBeerGroup;
+import mg.tommy.springboot.springbootwebapp.model.dto.BeerDto;
+import mg.tommy.springboot.springbootwebapp.model.dto.constraint.group.BeerGroup;
+import mg.tommy.springboot.springbootwebapp.model.dto.constraint.group.PartialBeerGroup;
 import mg.tommy.springboot.springbootwebapp.service.brewing.BeerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;

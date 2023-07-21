@@ -1,7 +1,7 @@
 package mg.tommy.springboot.springbootwebapp.service.library;
 
 import lombok.RequiredArgsConstructor;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Book;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Book;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.BookRepository;
 import org.springframework.stereotype.Service;
 

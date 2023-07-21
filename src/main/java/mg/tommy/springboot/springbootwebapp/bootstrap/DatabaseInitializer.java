@@ -1,9 +1,9 @@
 package mg.tommy.springboot.springbootwebapp.bootstrap;
 
 import jakarta.annotation.PostConstruct;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.*;
-import mg.tommy.springboot.springbootwebapp.domain.persistent.Role;
-import mg.tommy.springboot.springbootwebapp.domain.persistent.User;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.*;
+import mg.tommy.springboot.springbootwebapp.model.domain.persistent.Role;
+import mg.tommy.springboot.springbootwebapp.model.domain.persistent.User;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.*;
 import mg.tommy.springboot.springbootwebapp.repository.persistent.RoleRepository;
 import mg.tommy.springboot.springbootwebapp.repository.persistent.UserRepository;

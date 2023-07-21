@@ -2,16 +2,27 @@ package mg.tommy.springboot.springbootwebapp.bootstrap;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.*;
+import mg.tommy.springboot.springbootwebapp.mapper.BeerMapper;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.*;
+import mg.tommy.springboot.springbootwebapp.model.dto.BeerRecord;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.*;
+import mg.tommy.springboot.springbootwebapp.service.brewing.BeerCsvService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ResourceUtils;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -24,12 +35,16 @@ public class CommandLineInitializer implements CommandLineRunner {
     private final PublisherRepository publisherRepository;
     private final BeerRepository beerRepository;
     private final CustomerRepository customerRepository;
+    private final BeerCsvService beerCsvService;
+    private final BeerMapper beerMapper;
 
+    @Transactional("embeddedTransactionManager")
     @Override
     public void run(String... args) throws Exception {
         log.info("Command line runner executed after application startup!");
         insertBookData();
         insertBeerData();
+        insertBeerCsvData();
         insertCustomerData();
     }
 
@@ -64,6 +79,13 @@ public class CommandLineInitializer implements CommandLineRunner {
                 .updateDate(LocalDateTime.now())
                 .build());
 
+    }
+
+    private void insertBeerCsvData() throws FileNotFoundException {
+        File csvFile = ResourceUtils.getFile("classpath:static/repository/csv/beers.csv");
+        List<BeerRecord> beerRecords = beerCsvService.convertCsv(csvFile);
+        List<Beer> beers = beerRecords.stream().map(beerMapper::toBeer).collect(toList());
+        beerRepository.saveAll(beers);
     }
 
     private void insertCustomerData() {

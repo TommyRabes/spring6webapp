@@ -4,9 +4,9 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Client;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Order;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Product;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Client;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Order;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Product;
 import org.springframework.stereotype.Repository;
 
 import java.io.IOException;

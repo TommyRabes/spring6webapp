@@ -1,6 +1,6 @@
 package mg.tommy.springboot.springbootwebapp.service.traveling;
 
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Traveler;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Traveler;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.TravelerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

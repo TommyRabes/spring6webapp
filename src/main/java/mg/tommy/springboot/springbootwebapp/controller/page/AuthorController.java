@@ -1,7 +1,7 @@
 package mg.tommy.springboot.springbootwebapp.controller.page;
 
 import jakarta.validation.Valid;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Author;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Author;
 import mg.tommy.springboot.springbootwebapp.service.library.AuthorService;
 import mg.tommy.springboot.springbootwebapp.service.NotificationService;
 import org.slf4j.Logger;

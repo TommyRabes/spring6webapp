@@ -1,8 +1,8 @@
 package mg.tommy.springboot.springbootwebapp.repository.embedded;
 
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Client;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Order;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Product;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Client;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Order;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Product;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;

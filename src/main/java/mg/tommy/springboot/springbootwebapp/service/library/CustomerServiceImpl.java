@@ -1,8 +1,8 @@
 package mg.tommy.springboot.springbootwebapp.service.library;
 
 import lombok.RequiredArgsConstructor;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Customer;
-import mg.tommy.springboot.springbootwebapp.dto.CustomerDto;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Customer;
+import mg.tommy.springboot.springbootwebapp.model.dto.CustomerDto;
 import mg.tommy.springboot.springbootwebapp.mapper.CustomerMapper;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.CustomerRepository;
 import org.springframework.stereotype.Service;

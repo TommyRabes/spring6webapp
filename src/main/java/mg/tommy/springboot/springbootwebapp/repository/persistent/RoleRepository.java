@@ -1,6 +1,6 @@
 package mg.tommy.springboot.springbootwebapp.repository.persistent;
 
-import mg.tommy.springboot.springbootwebapp.domain.persistent.Role;
+import mg.tommy.springboot.springbootwebapp.model.domain.persistent.Role;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 

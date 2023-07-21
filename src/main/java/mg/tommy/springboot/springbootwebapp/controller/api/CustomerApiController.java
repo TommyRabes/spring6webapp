@@ -2,9 +2,9 @@ package mg.tommy.springboot.springbootwebapp.controller.api;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import mg.tommy.springboot.springbootwebapp.dto.CustomerDto;
-import mg.tommy.springboot.springbootwebapp.dto.constraint.group.CustomerGroup;
-import mg.tommy.springboot.springbootwebapp.dto.constraint.group.PartialCustomerGroup;
+import mg.tommy.springboot.springbootwebapp.model.dto.CustomerDto;
+import mg.tommy.springboot.springbootwebapp.model.dto.constraint.group.CustomerGroup;
+import mg.tommy.springboot.springbootwebapp.model.dto.constraint.group.PartialCustomerGroup;
 import mg.tommy.springboot.springbootwebapp.service.library.CustomerService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;

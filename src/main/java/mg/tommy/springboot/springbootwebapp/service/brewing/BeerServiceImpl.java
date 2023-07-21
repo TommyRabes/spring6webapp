@@ -1,9 +1,9 @@
 package mg.tommy.springboot.springbootwebapp.service.brewing;
 
 import lombok.RequiredArgsConstructor;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Beer;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.BeerStyle;
-import mg.tommy.springboot.springbootwebapp.dto.BeerDto;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Beer;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.BeerStyle;
+import mg.tommy.springboot.springbootwebapp.model.dto.BeerDto;
 import mg.tommy.springboot.springbootwebapp.mapper.BeerMapper;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.BeerRepository;
 import org.springframework.stereotype.Service;

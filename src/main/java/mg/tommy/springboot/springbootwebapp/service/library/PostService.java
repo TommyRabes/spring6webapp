@@ -1,6 +1,6 @@
 package mg.tommy.springboot.springbootwebapp.service.library;
 
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Post;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Post;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

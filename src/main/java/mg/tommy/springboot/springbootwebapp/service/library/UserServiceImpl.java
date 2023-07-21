@@ -1,7 +1,7 @@
 package mg.tommy.springboot.springbootwebapp.service.library;
 
-import mg.tommy.springboot.springbootwebapp.domain.persistent.Role;
-import mg.tommy.springboot.springbootwebapp.domain.persistent.User;
+import mg.tommy.springboot.springbootwebapp.model.domain.persistent.Role;
+import mg.tommy.springboot.springbootwebapp.model.domain.persistent.User;
 import mg.tommy.springboot.springbootwebapp.repository.persistent.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;

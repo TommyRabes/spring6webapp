@@ -1,7 +1,7 @@
 package mg.tommy.springboot.springbootwebapp.bootstrap;
 
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Beer;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Customer;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Beer;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Customer;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.BeerRepository;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.CustomerRepository;
 import org.junit.jupiter.api.Test;

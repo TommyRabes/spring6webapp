@@ -1,7 +1,7 @@
 package mg.tommy.springboot.springbootwebapp.service.traveling;
 
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Itinerary;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Plan;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Itinerary;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Plan;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.ItineraryRepository;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.PlanRepository;
 import org.springframework.beans.factory.annotation.Autowired;

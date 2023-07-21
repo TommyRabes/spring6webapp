@@ -2,8 +2,8 @@ package mg.tommy.springboot.springbootwebapp.controller.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.BeerStyle;
-import mg.tommy.springboot.springbootwebapp.dto.BeerDto;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.BeerStyle;
+import mg.tommy.springboot.springbootwebapp.model.dto.BeerDto;
 import mg.tommy.springboot.springbootwebapp.service.brewing.BeerService;
 import net.minidev.json.JSONObject;
 import org.assertj.core.util.Lists;

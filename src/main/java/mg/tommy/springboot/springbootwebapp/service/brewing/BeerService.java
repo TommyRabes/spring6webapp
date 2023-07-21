@@ -1,6 +1,6 @@
 package mg.tommy.springboot.springbootwebapp.service.brewing;
 
-import mg.tommy.springboot.springbootwebapp.dto.BeerDto;
+import mg.tommy.springboot.springbootwebapp.model.dto.BeerDto;
 
 import java.util.Optional;
 import java.util.UUID;

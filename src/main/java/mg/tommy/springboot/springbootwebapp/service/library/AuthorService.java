@@ -1,6 +1,6 @@
 package mg.tommy.springboot.springbootwebapp.service.library;
 
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Author;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Author;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.AuthorRepository;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;

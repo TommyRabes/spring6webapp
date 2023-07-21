@@ -1,6 +1,6 @@
 package mg.tommy.springboot.springbootwebapp.repository.embedded;
 
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Publisher;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Publisher;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.UUID;

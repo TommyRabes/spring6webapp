@@ -1,6 +1,6 @@
 package mg.tommy.springboot.springbootwebapp.controller.api;
 
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Plan;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Plan;
 import mg.tommy.springboot.springbootwebapp.exception.PlanNotFoundException;
 import mg.tommy.springboot.springbootwebapp.service.traveling.PlanService;
 import org.springframework.web.bind.annotation.*;

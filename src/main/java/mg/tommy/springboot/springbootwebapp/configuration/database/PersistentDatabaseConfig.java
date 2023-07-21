@@ -2,7 +2,7 @@ package mg.tommy.springboot.springbootwebapp.configuration.database;
 
 import mg.tommy.springboot.springbootwebapp.configuration.database.property.HibernateJpaProperties;
 import mg.tommy.springboot.springbootwebapp.configuration.database.property.JpaSchemaProperties;
-import mg.tommy.springboot.springbootwebapp.domain.persistent.User;
+import mg.tommy.springboot.springbootwebapp.model.domain.persistent.User;
 import mg.tommy.springboot.springbootwebapp.repository.persistent.UserRepository;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -21,7 +21,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 

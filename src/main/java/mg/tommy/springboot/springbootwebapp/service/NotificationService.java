@@ -3,7 +3,7 @@ package mg.tommy.springboot.springbootwebapp.service;
 import jakarta.mail.Message;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Author;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Author;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;

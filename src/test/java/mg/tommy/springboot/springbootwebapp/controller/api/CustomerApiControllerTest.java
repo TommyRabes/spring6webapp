@@ -2,7 +2,7 @@ package mg.tommy.springboot.springbootwebapp.controller.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import mg.tommy.springboot.springbootwebapp.dto.CustomerDto;
+import mg.tommy.springboot.springbootwebapp.model.dto.CustomerDto;
 import mg.tommy.springboot.springbootwebapp.service.library.CustomerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,7 +1,7 @@
 package mg.tommy.springboot.springbootwebapp.bootstrap;
 
 import jakarta.annotation.PostConstruct;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Post;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Post;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.PostRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,8 +1,8 @@
 package mg.tommy.springboot.springbootwebapp.service.library;
 
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Client;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Order;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Product;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Client;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Order;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Product;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.MarketRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

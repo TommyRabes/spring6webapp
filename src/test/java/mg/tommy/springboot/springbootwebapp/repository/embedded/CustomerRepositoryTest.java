@@ -2,10 +2,8 @@ package mg.tommy.springboot.springbootwebapp.repository.embedded;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
-import mg.tommy.springboot.springbootwebapp.bootstrap.CommandLineInitializer;
 import mg.tommy.springboot.springbootwebapp.configuration.database.EmbeddedDatabaseConfig;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Beer;
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Customer;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Customer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;

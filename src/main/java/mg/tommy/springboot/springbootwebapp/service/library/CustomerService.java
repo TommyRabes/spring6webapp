@@ -1,6 +1,6 @@
 package mg.tommy.springboot.springbootwebapp.service.library;
 
-import mg.tommy.springboot.springbootwebapp.dto.CustomerDto;
+import mg.tommy.springboot.springbootwebapp.model.dto.CustomerDto;
 
 import java.util.Optional;
 import java.util.UUID;

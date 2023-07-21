@@ -1,6 +1,6 @@
 package mg.tommy.springboot.springbootwebapp.repository.embedded;
 
-import mg.tommy.springboot.springbootwebapp.domain.embedded.Post;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Post;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
