@@ -10,8 +10,9 @@ spring:
         use_sql_comments: false
         generate_statistics: false
       properties:
-        databaseAction: drop-and-create
-        scriptsAction: drop-and-create
+        databaseAction: none
+        scriptsAction: none
         scriptsCreateSource: metadata
         scriptsDropTarget: mssql-drop-and-create.sql
         scriptsCreateTarget: mssql-drop-and-create.sql
+    defer-datasource-initialization: false

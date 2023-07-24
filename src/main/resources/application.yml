@@ -30,7 +30,7 @@ spring:
       platform: @spring.database.init.platform@
       # Need to set this explicitly in case of having mssql (or other non-in-memory database) as platform
       # By default, the mode is 'always' for embedded database like h2
-      mode: always
+      mode: never
 #  mvc:
 #    pathmatch:
 #      matching-strategy: ant_path_matcher

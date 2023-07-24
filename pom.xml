@@ -194,10 +194,10 @@
 					<groupId>org.postgresql</groupId>
 					<artifactId>postgresql</artifactId>
 				</dependency>
-				<!-- <dependency>
+				<dependency>
 					<groupId>org.flywaydb</groupId>
 					<artifactId>flyway-sqlserver</artifactId>
-				</dependency> -->
+				</dependency>
 			</dependencies>
 			<properties>
 				<spring.database.profiles>mssql-pg</spring.database.profiles>
@@ -217,10 +217,10 @@
 					<groupId>com.mysql</groupId>
 					<artifactId>mysql-connector-j</artifactId>
 				</dependency>
-				<!-- <dependency>
+				<dependency>
 					<groupId>org.flywaydb</groupId>
 					<artifactId>flyway-sqlserver</artifactId>
-				</dependency> -->
+				</dependency>
 			</dependencies>
 			<properties>
 				<spring.database.profiles>mssql-mysql</spring.database.profiles>

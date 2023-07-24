@@ -68,7 +68,8 @@ public class PersistentDatabaseConfig {
         entityManagerFactory.setJpaPropertyMap(propertyMap.get("persistentJPAPropertyMap"));
         entityManagerFactory.setPersistenceProviderClass(HibernatePersistenceProvider.class);
 
-        Objects.requireNonNull(entityManagerFactory.getPersistenceProvider()).generateSchema("Persistent", entityManagerFactory.getJpaPropertyMap());
+        System.out.println("Persistent entity manager factory schema generation");
+        // Objects.requireNonNull(entityManagerFactory.getPersistenceProvider()).generateSchema("Persistent", entityManagerFactory.getJpaPropertyMap());
         return entityManagerFactory;
     }
 

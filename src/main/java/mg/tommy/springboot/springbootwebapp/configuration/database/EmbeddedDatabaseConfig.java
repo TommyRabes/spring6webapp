@@ -74,7 +74,8 @@ public class EmbeddedDatabaseConfig {
         entityManagerFactory.setJpaPropertyMap(propertyMap.get("embeddedJPAPropertyMap"));
         entityManagerFactory.setPersistenceProviderClass(HibernatePersistenceProvider.class);
 
-        Objects.requireNonNull(entityManagerFactory.getPersistenceProvider()).generateSchema("Embedded", entityManagerFactory.getJpaPropertyMap());
+        System.out.println("Embedded entity manager factory schema generation");
+        // Objects.requireNonNull(entityManagerFactory.getPersistenceProvider()).generateSchema("Embedded", entityManagerFactory.getJpaPropertyMap());
         return entityManagerFactory;
     }
 

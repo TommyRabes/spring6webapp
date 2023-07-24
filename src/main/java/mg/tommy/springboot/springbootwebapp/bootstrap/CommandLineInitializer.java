@@ -82,6 +82,7 @@ public class CommandLineInitializer implements CommandLineRunner {
     }
 
     private void insertBeerCsvData() throws FileNotFoundException {
+        if (beerRepository.count() > 1000) return;
         File csvFile = ResourceUtils.getFile("classpath:static/repository/csv/beers.csv");
         List<BeerRecord> beerRecords = beerCsvService.convertCsv(csvFile);
         List<Beer> beers = beerRecords.stream().map(beerMapper::toBeer).collect(toList());
