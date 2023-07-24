@@ -15,4 +15,3 @@ spring:
         scriptsCreateSource: metadata
         scriptsDropTarget: mssql-drop-and-create.sql
         scriptsCreateTarget: mssql-drop-and-create.sql
-    defer-datasource-initialization: false

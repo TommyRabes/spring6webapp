@@ -175,6 +175,10 @@
 					<groupId>com.mysql</groupId>
 					<artifactId>mysql-connector-j</artifactId>
 				</dependency>
+				<dependency>
+					<groupId>org.flywaydb</groupId>
+					<artifactId>flyway-mysql</artifactId>
+				</dependency>
 			</dependencies>
 			<properties>
 				<spring.database.profiles>h2-mysql</spring.database.profiles>
@@ -214,12 +218,16 @@
 					<scope>runtime</scope>
 				</dependency>
 				<dependency>
+					<groupId>org.flywaydb</groupId>
+					<artifactId>flyway-sqlserver</artifactId>
+				</dependency>
+				<dependency>
 					<groupId>com.mysql</groupId>
 					<artifactId>mysql-connector-j</artifactId>
 				</dependency>
 				<dependency>
 					<groupId>org.flywaydb</groupId>
-					<artifactId>flyway-sqlserver</artifactId>
+					<artifactId>flyway-mysql</artifactId>
 				</dependency>
 			</dependencies>
 			<properties>

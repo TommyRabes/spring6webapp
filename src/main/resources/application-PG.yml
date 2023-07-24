@@ -14,4 +14,3 @@ spring:
         scriptsCreateSource: metadata
         scriptsDropTarget: pg-drop-and-create.sql
         scriptsCreateTarget: pg-drop-and-create.sql
-    defer-datasource-initialization: false

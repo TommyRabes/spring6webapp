@@ -24,7 +24,7 @@ spring:
   jpa:
     # Set this to true if we want to delay schema.sql and data.sql execution until after Hibernate has generated the database structure from entities
     # In case of using a migration tool like Flyway, set this to false
-    defer-datasource-initialization: true
+    defer-datasource-initialization: false
   sql:
     init:
       platform: @spring.database.init.platform@
