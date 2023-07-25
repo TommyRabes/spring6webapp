@@ -1,6 +1,7 @@
 package mg.tommy.springboot.springbootwebapp.bootstrap;
 
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import mg.tommy.springboot.springbootwebapp.model.domain.embedded.*;
 import mg.tommy.springboot.springbootwebapp.model.domain.persistent.Role;
 import mg.tommy.springboot.springbootwebapp.model.domain.persistent.User;
@@ -22,12 +23,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 @Profile({"Full", "Database"})
 @Component
 @Scope("singleton")
 public class DatabaseInitializer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseInitializer.class);
-
     private final AuthorRepository authorRepository;
     private final PostRepository postRepository;
     private final RoleRepository roleRepository;
@@ -66,14 +66,14 @@ public class DatabaseInitializer {
 
     @PostConstruct
     void feed() {
-        LOGGER.info("Database feed method called...");
+        log.info("Database feed method called...");
         feedUsers();
         feedPosts();
         feedPlans();
     }
 
     private void feedUsers() {
-        LOGGER.info("Creating users and roles");
+        log.info("Creating users and roles");
         Role guestRole = Role.builder().role("GUEST").build();
         Role readerRole = Role.builder().role("READER").build();
         Role clientRole = Role.builder().role("CLIENT").build();
@@ -109,7 +109,7 @@ public class DatabaseInitializer {
     }
 
     private void feedPosts() {
-        LOGGER.info("Feeding posts data...");
+        log.info("Feeding posts data...");
         Author author = new Author("Tommy", "Rabesalama");
         author.setEmail("rabesalama.tommy@gmail.com");
         author = authorRepository.save(author);
@@ -126,7 +126,7 @@ public class DatabaseInitializer {
     }
 
     private void feedPlans() {
-        LOGGER.info("Feeding plans data...");
+        log.info("Feeding plans data...");
 
         Traveler t1 = new Traveler("John Doe", "Male", toDate(LocalDate.of(1990, 6, 23)));
         Traveler t2 = new Traveler("Jane Smith", "Female", toDate(LocalDate.of(1985, 9, 20)));

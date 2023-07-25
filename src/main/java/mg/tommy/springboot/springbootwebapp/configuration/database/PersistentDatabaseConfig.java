@@ -4,8 +4,10 @@ import mg.tommy.springboot.springbootwebapp.configuration.database.property.Hibe
 import mg.tommy.springboot.springbootwebapp.configuration.database.property.JpaSchemaProperties;
 import mg.tommy.springboot.springbootwebapp.model.domain.persistent.User;
 import mg.tommy.springboot.springbootwebapp.repository.persistent.UserRepository;
+import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.flyway.FlywayConfigurationCustomizer;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
@@ -68,8 +70,6 @@ public class PersistentDatabaseConfig {
         entityManagerFactory.setJpaPropertyMap(propertyMap.get("persistentJPAPropertyMap"));
         entityManagerFactory.setPersistenceProviderClass(HibernatePersistenceProvider.class);
 
-        System.out.println("Persistent entity manager factory schema generation");
-        // Objects.requireNonNull(entityManagerFactory.getPersistenceProvider()).generateSchema("Persistent", entityManagerFactory.getJpaPropertyMap());
         return entityManagerFactory;
     }
 
@@ -82,8 +82,8 @@ public class PersistentDatabaseConfig {
 
     @Bean
     public JdbcTemplate persistentJdbcTemplate(
-            @Qualifier("persistentDataSource") DataSource persistentDateSource) {
-        return new JdbcTemplate(persistentDateSource);
+            @Qualifier("persistentDataSource") DataSource persistentDataSource) {
+        return new JdbcTemplate(persistentDataSource);
     }
 
     @Profile("PG")
@@ -121,6 +121,15 @@ public class PersistentDatabaseConfig {
         jpaPropertyMap.putAll(persistentJpaProperties.jpaPropertyMap());
 
         return jpaPropertyMap;
+    }
+
+    @Bean
+    public FlywayConfigurationCustomizer persistentFlywayConfigurationCustomizer(
+            @Qualifier("persistentDataSource") DataSource persistentDataSource
+    ) {
+        return (FluentConfiguration configuration) -> {
+            configuration.dataSource(persistentDataSource);
+        };
     }
 
 }

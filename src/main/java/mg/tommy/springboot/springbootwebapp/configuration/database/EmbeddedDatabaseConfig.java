@@ -4,8 +4,10 @@ import mg.tommy.springboot.springbootwebapp.configuration.database.property.Hibe
 import mg.tommy.springboot.springbootwebapp.configuration.database.property.JpaSchemaProperties;
 import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Post;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.PostRepository;
+import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.flyway.FlywayConfigurationCustomizer;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
@@ -74,8 +76,6 @@ public class EmbeddedDatabaseConfig {
         entityManagerFactory.setJpaPropertyMap(propertyMap.get("embeddedJPAPropertyMap"));
         entityManagerFactory.setPersistenceProviderClass(HibernatePersistenceProvider.class);
 
-        System.out.println("Embedded entity manager factory schema generation");
-        // Objects.requireNonNull(entityManagerFactory.getPersistenceProvider()).generateSchema("Embedded", entityManagerFactory.getJpaPropertyMap());
         return entityManagerFactory;
     }
 
@@ -88,8 +88,8 @@ public class EmbeddedDatabaseConfig {
 
     @Bean
     public JdbcTemplate embeddedJdbcTemplate(
-            @Qualifier("embeddedDataSource") DataSource embeddedDateSource) {
-        return new JdbcTemplate(embeddedDateSource);
+            @Qualifier("embeddedDataSource") DataSource embeddedDataSource) {
+        return new JdbcTemplate(embeddedDataSource);
     }
 
     @Profile("H2")
@@ -127,6 +127,15 @@ public class EmbeddedDatabaseConfig {
         jpaPropertyMap.putAll(embeddedJpaProperties.jpaPropertyMap());
 
         return jpaPropertyMap;
+    }
+
+    @Bean
+    public FlywayConfigurationCustomizer embeddedFlywayConfigurationCustomizer(
+            @Qualifier("embeddedDataSource") DataSource embeddedDataSource
+    ) {
+        return (FluentConfiguration configuration) -> {
+            configuration.dataSource(embeddedDataSource);
+        };
     }
 
 }
