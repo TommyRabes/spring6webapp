@@ -9,15 +9,20 @@ import mg.tommy.springboot.springbootwebapp.model.domain.embedded.BeerStyle;
 import mg.tommy.springboot.springbootwebapp.model.dto.BeerDto;
 import mg.tommy.springboot.springbootwebapp.mapper.BeerMapper;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.BeerRepository;
+import org.hamcrest.core.Is;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.Rollback;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.WebApplicationContext;
 
 
 import java.math.BigDecimal;
@@ -26,9 +31,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
 
+import static mg.tommy.springboot.springbootwebapp.controller.api.BeerApiController.ROOT_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -51,6 +61,11 @@ class BeerApiControllerIT {
      */
     @PersistenceContext
     EntityManager entityManager;
+
+    @Autowired
+    WebApplicationContext webApplicationContext;
+
+    MockMvc mockMvc;
 
     @Test
     @Order(2)
@@ -92,6 +107,26 @@ class BeerApiControllerIT {
         assertThrows(NotFoundException.class, () -> {
             beerApiController.getBeerByUUID(UUID.randomUUID());
         });
+    }
+
+    @Test
+    public void getBeersByName() throws Exception {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+
+        mockMvc.perform(get(ROOT_PATH)
+                        .queryParam("beerName", "IPA"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()", is(100)));
+    }
+
+    @Test
+    public void getBeersByStyle() throws Exception {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+
+        mockMvc.perform(get(ROOT_PATH)
+                        .queryParam("beerStyle", "LAGER"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()", is(200)));
     }
 
     @Transactional("embeddedTransactionManager")
