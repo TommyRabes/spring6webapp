@@ -2,6 +2,7 @@ spring:
   jpa:
     mssql:
       hibernate:
+        hbm2ddl_auto: validate
         dialect: org.hibernate.dialect.SQLServerDialect
         default_schema: dbo
         physical_naming_strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
@@ -9,9 +10,3 @@ spring:
         format_sql: false
         use_sql_comments: false
         generate_statistics: false
-      properties:
-        databaseAction: none
-        scriptsAction: none
-        scriptsCreateSource: metadata
-        scriptsDropTarget: mssql-drop-and-create.sql
-        scriptsCreateTarget: mssql-drop-and-create.sql

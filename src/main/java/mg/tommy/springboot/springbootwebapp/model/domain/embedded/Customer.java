@@ -47,6 +47,11 @@ public class Customer {
     @NotNull
     @Early(years = 18)
     private LocalDate birthdate;
+
+    @Size(min = 5, max = 200)
+    @Column(length = 200)
+    private String address;
+
     private LocalDateTime createdDate;
     private LocalDateTime updateDate;
 }

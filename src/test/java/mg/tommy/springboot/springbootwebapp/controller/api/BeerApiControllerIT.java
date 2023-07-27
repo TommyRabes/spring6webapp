@@ -57,7 +57,7 @@ class BeerApiControllerIT {
     public void getAllBeersTest() {
         Iterable<BeerDto> dtos = beerApiController.getAllBeers();
 
-        assertThat(dtos).hasSize(3);
+        assertThat(dtos).hasSize(2413);
     }
 
     /**
@@ -161,7 +161,7 @@ class BeerApiControllerIT {
     @Test
     public void saveBeerWithInvalidFieldsTest() {
         BeerDto beerDto = BeerDto.builder()
-                .beerName("be")
+                .beerName("b")
                 .beerStyle(BeerStyle.PORTER.name())
                 .upc("up")
                 .quantityOnHand(-1)
@@ -241,7 +241,7 @@ class BeerApiControllerIT {
         entityManager.detach(beer);
 
         BeerDto beerDto = BeerDto.builder()
-                .beerName("na")
+                .beerName("n")
                 .beerStyle(BeerStyle.LAGER.name())
                 .upc("0123456789".repeat(11))
                 .quantityOnHand(-1)
@@ -321,7 +321,7 @@ class BeerApiControllerIT {
         entityManager.detach(beerToPatch);
 
         BeerDto beerForPatch = BeerDto.builder()
-                .beerName("na")
+                .beerName("n")
                 .quantityOnHand(-1)
                 .build();
 

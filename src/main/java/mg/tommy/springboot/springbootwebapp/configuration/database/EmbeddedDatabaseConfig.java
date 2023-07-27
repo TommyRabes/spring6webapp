@@ -4,10 +4,8 @@ import mg.tommy.springboot.springbootwebapp.configuration.database.property.Hibe
 import mg.tommy.springboot.springbootwebapp.configuration.database.property.JpaSchemaProperties;
 import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Post;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.PostRepository;
-import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.flyway.FlywayConfigurationCustomizer;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
@@ -52,6 +50,7 @@ public class EmbeddedDatabaseConfig {
 
     @Bean
     @Primary
+    // @FlywayDataSource
     public DataSource embeddedDataSource(
             @Qualifier("embeddedDataSourceProperties") DataSourceProperties dataSourceProperties) {
         return dataSourceProperties.initializeDataSourceBuilder().build();
@@ -123,19 +122,10 @@ public class EmbeddedDatabaseConfig {
     @Bean
     public Map<String, Object> embeddedJPAPropertyMap(HibernateJpaProperties embeddedHibernateProperties, JpaSchemaProperties embeddedJpaProperties) {
         Map<String, Object> jpaPropertyMap = embeddedHibernateProperties.jpaPropertyMap();
-        jpaPropertyMap.put("javax.persistence.sharedCache.mode", "ENABLE_SELECTIVE");
+        jpaPropertyMap.put("jakarta.persistence.sharedCache.mode", "ENABLE_SELECTIVE");
         jpaPropertyMap.putAll(embeddedJpaProperties.jpaPropertyMap());
 
         return jpaPropertyMap;
-    }
-
-    @Bean
-    public FlywayConfigurationCustomizer embeddedFlywayConfigurationCustomizer(
-            @Qualifier("embeddedDataSource") DataSource embeddedDataSource
-    ) {
-        return (FluentConfiguration configuration) -> {
-            configuration.dataSource(embeddedDataSource);
-        };
     }
 
 }

@@ -55,7 +55,7 @@ class BeerRepositoryTest {
     public void persistBeerWithInvalidColumnTest() {
         ConstraintViolationException thrownException = assertThrows(ConstraintViolationException.class, () -> {
             beerRepository.saveAndFlush(Beer.builder()
-                    .beerName("be")
+                    .beerName("b")
                     .beerStyle(BeerStyle.PORTER)
                     .upc("up")
                     .quantityOnHand(-1)

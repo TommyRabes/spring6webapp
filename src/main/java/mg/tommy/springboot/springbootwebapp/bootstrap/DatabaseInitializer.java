@@ -73,6 +73,8 @@ public class DatabaseInitializer {
     }
 
     private void feedUsers() {
+        if (userRepository.count() > 2) return;
+
         log.info("Creating users and roles");
         Role guestRole = Role.builder().role("GUEST").build();
         Role readerRole = Role.builder().role("READER").build();
@@ -109,6 +111,8 @@ public class DatabaseInitializer {
     }
 
     private void feedPosts() {
+        if (postRepository.count() > 0) return;
+
         log.info("Feeding posts data...");
         Author author = new Author("Tommy", "Rabesalama");
         author.setEmail("rabesalama.tommy@gmail.com");
@@ -126,6 +130,8 @@ public class DatabaseInitializer {
     }
 
     private void feedPlans() {
+        if (planRepository.count() > 0) return;
+
         log.info("Feeding plans data...");
 
         Traveler t1 = new Traveler("John Doe", "Male", toDate(LocalDate.of(1990, 6, 23)));

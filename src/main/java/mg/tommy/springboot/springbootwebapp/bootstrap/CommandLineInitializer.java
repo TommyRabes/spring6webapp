@@ -49,6 +49,8 @@ public class CommandLineInitializer implements CommandLineRunner {
     }
 
     private void insertBeerData() {
+        if (beerRepository.count() > 1000) return;
+
         beerRepository.save(Beer.builder()
                 .beerName("Galaxy Cat")
                 .beerStyle(BeerStyle.PALE_ALE)
@@ -83,6 +85,7 @@ public class CommandLineInitializer implements CommandLineRunner {
 
     private void insertBeerCsvData() throws FileNotFoundException {
         if (beerRepository.count() > 1000) return;
+
         File csvFile = ResourceUtils.getFile("classpath:static/repository/csv/beers.csv");
         List<BeerRecord> beerRecords = beerCsvService.convertCsv(csvFile);
         List<Beer> beers = beerRecords.stream().map(beerMapper::toBeer).collect(toList());
@@ -90,6 +93,8 @@ public class CommandLineInitializer implements CommandLineRunner {
     }
 
     private void insertCustomerData() {
+        if (customerRepository.count() > 2) return;
+
         customerRepository.save(Customer.builder()
                 .firstName("John")
                 .lastName("Doe")
@@ -119,6 +124,8 @@ public class CommandLineInitializer implements CommandLineRunner {
     }
 
     private void insertBookData() {
+        if (bookRepository.count() > 0) return;
+
         Author eric = new Author();
         eric.setFirstName("Eric");
         eric.setLastName("Evans");

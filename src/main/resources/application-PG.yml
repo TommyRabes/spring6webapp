@@ -9,7 +9,7 @@ spring:
         use_sql_comments: false
         generate_statistics: false
       properties:
-        databaseAction: none
+        databaseAction: drop-and-create
         scriptsAction: none
         scriptsCreateSource: metadata
         scriptsDropTarget: pg-drop-and-create.sql

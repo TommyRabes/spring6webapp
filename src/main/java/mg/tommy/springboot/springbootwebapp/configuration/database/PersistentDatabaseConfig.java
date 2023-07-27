@@ -4,10 +4,8 @@ import mg.tommy.springboot.springbootwebapp.configuration.database.property.Hibe
 import mg.tommy.springboot.springbootwebapp.configuration.database.property.JpaSchemaProperties;
 import mg.tommy.springboot.springbootwebapp.model.domain.persistent.User;
 import mg.tommy.springboot.springbootwebapp.repository.persistent.UserRepository;
-import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.flyway.FlywayConfigurationCustomizer;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
@@ -117,19 +115,10 @@ public class PersistentDatabaseConfig {
     @Bean
     public Map<String, Object> persistentJPAPropertyMap(HibernateJpaProperties persistentHibernateProperties, JpaSchemaProperties persistentJpaProperties) {
         Map<String, Object> jpaPropertyMap = persistentHibernateProperties.jpaPropertyMap();
-        jpaPropertyMap.put("javax.persistence.sharedCache.mode", "ENABLE_SELECTIVE");
+        jpaPropertyMap.put("jakarta.persistence.sharedCache.mode", "ENABLE_SELECTIVE");
         jpaPropertyMap.putAll(persistentJpaProperties.jpaPropertyMap());
 
         return jpaPropertyMap;
-    }
-
-    @Bean
-    public FlywayConfigurationCustomizer persistentFlywayConfigurationCustomizer(
-            @Qualifier("persistentDataSource") DataSource persistentDataSource
-    ) {
-        return (FluentConfiguration configuration) -> {
-            configuration.dataSource(persistentDataSource);
-        };
     }
 
 }
