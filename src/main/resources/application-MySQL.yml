@@ -15,8 +15,8 @@ spring:
         # Therefore, we can use JPA's properties instead:
         # - 'jakarta.persistence.schema-generation.database.action': to apply the schema migration against the database
         # - 'jakarta.persistence.schema-generation.scripts.action': to generate the schema migration DDL statements to a file
-        databaseAction: none
-        scriptsAction: none
+        databaseAction: drop-and-create
+        scriptsAction: drop-and-create
         scriptsCreateSource: metadata
         scriptsDropTarget: mysql-drop-and-create.sql
         scriptsCreateTarget: mysql-drop-and-create.sql
