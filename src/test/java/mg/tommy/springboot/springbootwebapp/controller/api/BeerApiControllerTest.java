@@ -134,8 +134,8 @@ class BeerApiControllerTest {
     ArgumentCaptor<BeerDto> beerArgumentCaptor;
 
     @Test
-    public void getAllBeerTest() throws Exception {
-        given(beerService.findAll()).willReturn(Lists.list(GALAXY, SUNSHINE));
+    public void findAllBeerTest() throws Exception {
+        given(beerService.find(null, null, false, 1, 25)).willReturn(Lists.list(GALAXY, SUNSHINE));
 
         mockMvc.perform(get(ROOT_PATH).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

@@ -2,6 +2,7 @@ package mg.tommy.springboot.springbootwebapp.controller.api;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import mg.tommy.springboot.springbootwebapp.model.domain.embedded.BeerStyle;
 import mg.tommy.springboot.springbootwebapp.model.dto.BeerDto;
 import mg.tommy.springboot.springbootwebapp.model.dto.constraint.group.BeerGroup;
 import mg.tommy.springboot.springbootwebapp.model.dto.constraint.group.PartialBeerGroup;
@@ -24,8 +25,13 @@ public class BeerApiController {
     private final BeerService beerService;
 
     @RequestMapping(method = RequestMethod.GET)
-    public Iterable<BeerDto> getAllBeers() {
-        return beerService.findAll();
+    public Iterable<BeerDto> findBeers(
+            @RequestParam(required = false) String beerName,
+            @RequestParam(required = false) BeerStyle beerStyle,
+            @RequestParam(defaultValue = "false") boolean showInventory,
+            @RequestParam(required = false) Integer pageNumber,
+            @RequestParam(required = false) Integer pageSize) {
+        return beerService.find(beerName, beerStyle, showInventory, pageNumber, pageSize);
     }
 
     @GetMapping("{uuid}")

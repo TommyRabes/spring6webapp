@@ -6,28 +6,60 @@ import mg.tommy.springboot.springbootwebapp.model.domain.embedded.BeerStyle;
 import mg.tommy.springboot.springbootwebapp.model.dto.BeerDto;
 import mg.tommy.springboot.springbootwebapp.mapper.BeerMapper;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.BeerRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 
 @RequiredArgsConstructor
 @Service
 public class BeerServiceImpl implements BeerService {
+    private static final int DEFAULT_PAGE = 0;
+    private static final int DEFAULT_PAGE_SIZE = 25;
+    private static final int MAX_PAGE_SIZE = 1000;
+
     private final BeerRepository beerRepository;
     private final BeerMapper beerMapper;
 
     @Override
-    public Iterable<BeerDto> findAll() {
-        return beerRepository.findAll()
+    public Iterable<BeerDto> find(String beerName, BeerStyle beerStyle, boolean showInventory, Integer pageNumber, Integer pageSize) {
+        return (StringUtils.hasText(beerName) && beerStyle != null ? findBeersByNameAndStyle(beerName, beerStyle) :
+                StringUtils.hasText(beerName) ? findBeersByName(beerName) :
+                beerStyle != null ? findBeersByStyle(beerStyle) :
+                        beerRepository.findAll())
                 .stream()
+                .peek(beer -> {
+                    if (!showInventory) beer.setQuantityOnHand(null);
+                })
                 .map(beerMapper::toBeerDto)
                 .collect(toList());
+    }
+
+    private PageRequest buildPageRequest(Integer pageNumber, Integer pageSize) {
+        int queryPageNumber = pageNumber != null && pageNumber > 0 ? pageNumber : DEFAULT_PAGE;
+        int queryPageSize = pageSize != null && pageSize > 0 ? Math.min(pageSize, MAX_PAGE_SIZE) : DEFAULT_PAGE_SIZE;
+
+        return PageRequest.of(queryPageNumber, queryPageSize);
+    }
+
+    private List<Beer> findBeersByNameAndStyle(String beerName, BeerStyle beerStyle) {
+        return beerRepository.findAllByBeerNameIsLikeIgnoreCaseAndBeerStyle("%" + beerName + "%", beerStyle);
+    }
+
+    private List<Beer> findBeersByName(String beerName) {
+        return beerRepository.findAllByBeerNameIsLikeIgnoreCase("%" + beerName + "%");
+    }
+
+    private List<Beer> findBeersByStyle(BeerStyle beerStyle) {
+        return beerRepository.findAllByBeerStyle(beerStyle);
     }
 
     @Override
@@ -83,7 +115,7 @@ public class BeerServiceImpl implements BeerService {
         if (StringUtils.hasText(beerDto.getUpc()))
             builder.upc(beerDto.getUpc());
         builder.updateDate(LocalDateTime.now());
-        return Optional.ofNullable(beerMapper.toBeerDto(beerRepository.save(builder.build())));
+        return ofNullable(beerMapper.toBeerDto(beerRepository.save(builder.build())));
     }
 
     @Override

@@ -2,9 +2,14 @@ package mg.tommy.springboot.springbootwebapp.repository.embedded;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import mg.tommy.springboot.springbootwebapp.bootstrap.CommandLineInitializer;
 import mg.tommy.springboot.springbootwebapp.configuration.database.EmbeddedDatabaseConfig;
+import mg.tommy.springboot.springbootwebapp.mapper.BeerMapperImpl;
+import mg.tommy.springboot.springbootwebapp.mapper.BeerPropertyMapping;
 import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Beer;
 import mg.tommy.springboot.springbootwebapp.model.domain.embedded.BeerStyle;
+import mg.tommy.springboot.springbootwebapp.service.brewing.BeerCsvService;
+import mg.tommy.springboot.springbootwebapp.service.brewing.BeerCsvServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -13,6 +18,7 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -22,11 +28,27 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @Transactional("embeddedTransactionManager")
 @Rollback
 @DataJpaTest
-@Import({ EmbeddedDatabaseConfig.class })
+@Import({
+        EmbeddedDatabaseConfig.class,
+        CommandLineInitializer.class,
+        BeerCsvServiceImpl.class,
+        BeerMapperImpl.class,
+        BeerPropertyMapping.class
+})
 class BeerRepositoryTest {
 
     @Autowired
     BeerRepository beerRepository;
+
+    @Test
+    public void findAllByBeerNameTest() {
+        List<Beer> beers = beerRepository.findAllByBeerNameIsLikeIgnoreCase("%IPA%");
+
+        assertThat(beers).hasSize(336);
+        for (Beer beer : beers) {
+            assertThat(beer.getBeerName()).containsIgnoringCase("IPA");
+        }
+    }
 
     @Test
     public void persistBeerTest() {

@@ -9,7 +9,6 @@ import mg.tommy.springboot.springbootwebapp.model.domain.embedded.BeerStyle;
 import mg.tommy.springboot.springbootwebapp.model.dto.BeerDto;
 import mg.tommy.springboot.springbootwebapp.mapper.BeerMapper;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.BeerRepository;
-import org.hamcrest.core.Is;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,7 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.annotation.Propagation;
@@ -31,9 +30,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
 
+import static java.lang.Boolean.TRUE;
 import static mg.tommy.springboot.springbootwebapp.controller.api.BeerApiController.ROOT_PATH;
+import static mg.tommy.springboot.springbootwebapp.model.domain.embedded.BeerStyle.IPA;
+import static mg.tommy.springboot.springbootwebapp.model.domain.embedded.BeerStyle.LAGER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -69,8 +73,8 @@ class BeerApiControllerIT {
 
     @Test
     @Order(2)
-    public void getAllBeersTest() {
-        Iterable<BeerDto> dtos = beerApiController.getAllBeers();
+    public void findAllBeersTest() {
+        Iterable<BeerDto> dtos = beerApiController.findBeers(null, null, false, 1, 25);
 
         assertThat(dtos).hasSize(2413);
     }
@@ -86,7 +90,7 @@ class BeerApiControllerIT {
     @Order(1)
     public void getEmptyBeerListTest() {
         beerRepository.deleteAll();
-        Iterable<BeerDto> dtos = beerApiController.getAllBeers();
+        Iterable<BeerDto> dtos = beerApiController.findBeers(null, null, false, 1, 25);
 
         assertThat(dtos).hasSize(0);
     }
@@ -110,23 +114,110 @@ class BeerApiControllerIT {
     }
 
     @Test
-    public void getBeersByName() throws Exception {
+    public void findBeersByEmptyNameTest() throws Exception {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+
+        mockMvc.perform(get(ROOT_PATH)
+                        .queryParam("beerName", ""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()", is(2413)));
+    }
+
+    @Test
+    public void findBeersByNameTest() throws Exception {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
 
         mockMvc.perform(get(ROOT_PATH)
                         .queryParam("beerName", "IPA"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(100)));
+                .andExpect(jsonPath("$.size()", is(336)));
     }
 
     @Test
-    public void getBeersByStyle() throws Exception {
+    public void findBeersByStyleTest() throws Exception {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
 
         mockMvc.perform(get(ROOT_PATH)
-                        .queryParam("beerStyle", "LAGER"))
+                        .queryParam("beerStyle", LAGER.name()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(200)));
+                .andExpect(jsonPath("$.size()", is(158)));
+    }
+
+    @Test
+    public void findBeersByBadStyleTest() throws Exception {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+
+        mockMvc.perform(get(ROOT_PATH)
+                        .queryParam("beerStyle", "STDOUT"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void findBeersByNameAndStyleTest() throws Exception {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+
+        mockMvc.perform(get(ROOT_PATH)
+                        .queryParam("beerName", "IPA")
+                        .queryParam("beerStyle", IPA.name()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()", is(324)));
+    }
+
+    @Test
+    public void findBeersByNameAndStyleShowInventoryTest() throws Exception {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+
+        final int expectedMatch = 324;
+        ResultActions resultActions = mockMvc.perform(get(ROOT_PATH)
+                        .queryParam("beerName", "IPA")
+                        .queryParam("beerStyle", IPA.name())
+                        .queryParam("showInventory", TRUE.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()", is(expectedMatch)));
+        for (int i = 0; i < expectedMatch; i++) {
+            resultActions = resultActions.andExpect(jsonPath("$.[" + i + "].quantityOnHand").value(notNullValue()));
+        }
+    }
+
+    @Test
+    public void findBeersByNameAndStyleNotShowInventoryTest() throws Exception {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+
+        final int expectedMatch = 324;
+        ResultActions resultActions = mockMvc.perform(get(ROOT_PATH)
+                        .queryParam("beerName", "IPA")
+                        .queryParam("beerStyle", IPA.name()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()", is(expectedMatch)));
+        for (int i = 0; i < expectedMatch; i++) {
+            resultActions = resultActions.andExpect(jsonPath("$.[" + i + "].quantityOnHand").value(nullValue()));
+        }
+    }
+
+    @Test
+    public void findBeersByNameAndStylePage1Test() throws Exception {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+
+        mockMvc.perform(get(ROOT_PATH)
+                        .queryParam("beerName", "IPA")
+                        .queryParam("beerStyle", IPA.name())
+                        .queryParam("pageNumber", "1")
+                        .queryParam("pageSize", "50"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()", is(50)));
+    }
+
+    @Test
+    public void findBeersByNameAndStylePage2Test() throws Exception {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+
+        mockMvc.perform(get(ROOT_PATH)
+                        .queryParam("beerName", "IPA")
+                        .queryParam("beerStyle", IPA.name())
+                        .queryParam("pageNumber", "2")
+                        .queryParam("pageSize", "50"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()", is(50)));
     }
 
     @Transactional("embeddedTransactionManager")
@@ -277,7 +368,7 @@ class BeerApiControllerIT {
 
         BeerDto beerDto = BeerDto.builder()
                 .beerName("n")
-                .beerStyle(BeerStyle.LAGER.name())
+                .beerStyle(LAGER.name())
                 .upc("0123456789".repeat(11))
                 .quantityOnHand(-1)
                 .price(new BigDecimal("-1"))
