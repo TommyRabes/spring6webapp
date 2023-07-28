@@ -12,6 +12,7 @@ import mg.tommy.springboot.springbootwebapp.repository.embedded.BeerRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.Rollback;
@@ -74,9 +75,18 @@ class BeerApiControllerIT {
     @Test
     @Order(2)
     public void findAllBeersTest() {
-        Iterable<BeerDto> dtos = beerApiController.findBeers(null, null, false, 1, 25);
+        Page<BeerDto> dtos = beerApiController.findBeers(null, null, false, 1, 25);
 
-        assertThat(dtos).hasSize(2413);
+        assertThat(dtos).hasSize(25);
+        assertThat(dtos.getTotalElements()).isEqualTo(2413);
+    }
+
+    @Test
+    public void findAllBeersPageSizeThresholdTest() {
+        Page<BeerDto> dtos = beerApiController.findBeers(null, null, false, 1, 2000);
+
+        assertThat(dtos).hasSize(1000);
+        assertThat(dtos.getTotalElements()).isEqualTo(2413);
     }
 
     /**
@@ -120,7 +130,8 @@ class BeerApiControllerIT {
         mockMvc.perform(get(ROOT_PATH)
                         .queryParam("beerName", ""))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(2413)));
+                .andExpect(jsonPath("$.content.size()", is(25)))
+                .andExpect(jsonPath("$.totalElements", is(2413)));
     }
 
     @Test
@@ -130,7 +141,8 @@ class BeerApiControllerIT {
         mockMvc.perform(get(ROOT_PATH)
                         .queryParam("beerName", "IPA"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(336)));
+                .andExpect(jsonPath("$.content.size()", is(25)))
+                .andExpect(jsonPath("$.totalElements", is(336)));
     }
 
     @Test
@@ -140,7 +152,8 @@ class BeerApiControllerIT {
         mockMvc.perform(get(ROOT_PATH)
                         .queryParam("beerStyle", LAGER.name()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(158)));
+                .andExpect(jsonPath("$.content.size()", is(25)))
+                .andExpect(jsonPath("$.totalElements", is(158)));
     }
 
     @Test
@@ -160,7 +173,8 @@ class BeerApiControllerIT {
                         .queryParam("beerName", "IPA")
                         .queryParam("beerStyle", IPA.name()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(324)));
+                .andExpect(jsonPath("$.content.size()", is(25)))
+                .andExpect(jsonPath("$.totalElements", is(324)));
     }
 
     @Test
@@ -168,14 +182,16 @@ class BeerApiControllerIT {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
 
         final int expectedMatch = 324;
+        final int returnedMatch = 25;
         ResultActions resultActions = mockMvc.perform(get(ROOT_PATH)
                         .queryParam("beerName", "IPA")
                         .queryParam("beerStyle", IPA.name())
                         .queryParam("showInventory", TRUE.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(expectedMatch)));
-        for (int i = 0; i < expectedMatch; i++) {
-            resultActions = resultActions.andExpect(jsonPath("$.[" + i + "].quantityOnHand").value(notNullValue()));
+                .andExpect(jsonPath("$.content.size()", is(returnedMatch)))
+                .andExpect(jsonPath("$.totalElements", is(expectedMatch)));
+        for (int i = 0; i < returnedMatch; i++) {
+            resultActions = resultActions.andExpect(jsonPath("$.content.[" + i + "].quantityOnHand").value(notNullValue()));
         }
     }
 
@@ -184,13 +200,15 @@ class BeerApiControllerIT {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
 
         final int expectedMatch = 324;
+        final int returnedMatch = 25;
         ResultActions resultActions = mockMvc.perform(get(ROOT_PATH)
                         .queryParam("beerName", "IPA")
                         .queryParam("beerStyle", IPA.name()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(expectedMatch)));
-        for (int i = 0; i < expectedMatch; i++) {
-            resultActions = resultActions.andExpect(jsonPath("$.[" + i + "].quantityOnHand").value(nullValue()));
+                .andExpect(jsonPath("$.content.size()", is(returnedMatch)))
+                .andExpect(jsonPath("$.totalElements", is(expectedMatch)));
+        for (int i = 0; i < returnedMatch; i++) {
+            resultActions = resultActions.andExpect(jsonPath("$.content.[" + i + "].quantityOnHand").value(nullValue()));
         }
     }
 
@@ -204,7 +222,9 @@ class BeerApiControllerIT {
                         .queryParam("pageNumber", "1")
                         .queryParam("pageSize", "50"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(50)));
+                .andExpect(jsonPath("$.content.size()", is(50)))
+                .andExpect(jsonPath("$.number", is(1)))
+                .andExpect(jsonPath("$.totalElements", is(324)));
     }
 
     @Test
@@ -217,7 +237,24 @@ class BeerApiControllerIT {
                         .queryParam("pageNumber", "2")
                         .queryParam("pageSize", "50"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(50)));
+                .andExpect(jsonPath("$.content.size()", is(50)))
+                .andExpect(jsonPath("$.number", is(2)))
+                .andExpect(jsonPath("$.totalElements", is(324)));
+    }
+
+    @Test
+    public void findBeersByNameAndStylePageTooLargeTest() throws Exception {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+
+        mockMvc.perform(get(ROOT_PATH)
+                        .queryParam("beerName", "IPA")
+                        .queryParam("beerStyle", IPA.name())
+                        .queryParam("pageNumber", "0")
+                        .queryParam("pageSize", "500"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.size()", is(324)))
+                .andExpect(jsonPath("$.number", is(0)))
+                .andExpect(jsonPath("$.totalElements", is(324)));
     }
 
     @Transactional("embeddedTransactionManager")

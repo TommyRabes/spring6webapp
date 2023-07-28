@@ -8,12 +8,12 @@ import mg.tommy.springboot.springbootwebapp.mapper.BeerMapperImpl;
 import mg.tommy.springboot.springbootwebapp.mapper.BeerPropertyMapping;
 import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Beer;
 import mg.tommy.springboot.springbootwebapp.model.domain.embedded.BeerStyle;
-import mg.tommy.springboot.springbootwebapp.service.brewing.BeerCsvService;
 import mg.tommy.springboot.springbootwebapp.service.brewing.BeerCsvServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,7 +42,7 @@ class BeerRepositoryTest {
 
     @Test
     public void findAllByBeerNameTest() {
-        List<Beer> beers = beerRepository.findAllByBeerNameIsLikeIgnoreCase("%IPA%");
+        List<Beer> beers = beerRepository.findAllByBeerNameIsLikeIgnoreCase("%IPA%", null).getContent();
 
         assertThat(beers).hasSize(336);
         for (Beer beer : beers) {

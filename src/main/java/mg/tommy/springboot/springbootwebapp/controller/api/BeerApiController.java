@@ -7,6 +7,7 @@ import mg.tommy.springboot.springbootwebapp.model.dto.BeerDto;
 import mg.tommy.springboot.springbootwebapp.model.dto.constraint.group.BeerGroup;
 import mg.tommy.springboot.springbootwebapp.model.dto.constraint.group.PartialBeerGroup;
 import mg.tommy.springboot.springbootwebapp.service.brewing.BeerService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +26,7 @@ public class BeerApiController {
     private final BeerService beerService;
 
     @RequestMapping(method = RequestMethod.GET)
-    public Iterable<BeerDto> findBeers(
+    public Page<BeerDto> findBeers(
             @RequestParam(required = false) String beerName,
             @RequestParam(required = false) BeerStyle beerStyle,
             @RequestParam(defaultValue = "false") boolean showInventory,

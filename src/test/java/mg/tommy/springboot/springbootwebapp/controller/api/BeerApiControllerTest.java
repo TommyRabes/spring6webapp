@@ -15,6 +15,7 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
@@ -135,12 +136,12 @@ class BeerApiControllerTest {
 
     @Test
     public void findAllBeerTest() throws Exception {
-        given(beerService.find(null, null, false, 1, 25)).willReturn(Lists.list(GALAXY, SUNSHINE));
+        given(beerService.find(null, null, false, null, null)).willReturn(new PageImpl<>(Lists.list(GALAXY, SUNSHINE)));
 
         mockMvc.perform(get(ROOT_PATH).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.length()", is(2)));
+                .andExpect(jsonPath("$.content.length()", is(2)));
     }
 
     @Test
