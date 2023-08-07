@@ -10,6 +10,8 @@ import mg.tommy.springboot.springbootwebapp.model.dto.constraint.validator.Early
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Builder(toBuilder = true)
@@ -54,4 +56,8 @@ public class Customer {
 
     private LocalDateTime createdDate;
     private LocalDateTime updateDate;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "customer")
+    private Set<BeerOrder> beerOrders = new HashSet<>();
 }

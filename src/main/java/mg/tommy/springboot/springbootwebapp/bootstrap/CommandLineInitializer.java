@@ -34,6 +34,7 @@ public class CommandLineInitializer implements CommandLineRunner {
     private final BookRepository bookRepository;
     private final PublisherRepository publisherRepository;
     private final BeerRepository beerRepository;
+    private final BeerOrderRepository beerOrderRepository;
     private final CustomerRepository customerRepository;
     private final BeerCsvService beerCsvService;
     private final BeerMapper beerMapper;
@@ -95,7 +96,7 @@ public class CommandLineInitializer implements CommandLineRunner {
     private void insertCustomerData() {
         if (customerRepository.count() > 2) return;
 
-        customerRepository.save(Customer.builder()
+        Customer john = customerRepository.save(Customer.builder()
                 .firstName("John")
                 .lastName("Doe")
                 .email("john.doe@gmail.com")
@@ -121,6 +122,16 @@ public class CommandLineInitializer implements CommandLineRunner {
                 .createdDate(LocalDateTime.now())
                 .updateDate(LocalDateTime.now())
                 .build());
+
+        BeerOrder beerOrder = BeerOrder.builder()
+                .customerRef("Test order")
+                .customer(john)
+                .beerOrderShipment(BeerOrderShipment.builder()
+                        .trackingNumber("6814735")
+                        .build())
+                .build();
+
+        beerOrderRepository.save(beerOrder);
     }
 
     private void insertBookData() {
