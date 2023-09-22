@@ -35,11 +35,6 @@ spring:
 #    pathmatch:
 #      matching-strategy: ant_path_matcher
 
-#  security:
-#    user:
-#      name: Tommy
-#      password: 123456
-#      roles: GUEST,CLIENT
   mail:
     host: smtp.gmail.com
     username: rabesalama.tommy@gmail.com

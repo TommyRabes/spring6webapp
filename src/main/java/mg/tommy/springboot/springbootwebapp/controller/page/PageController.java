@@ -1,8 +1,6 @@
 package mg.tommy.springboot.springbootwebapp.controller.page;
 
 import mg.tommy.springboot.springbootwebapp.service.library.MarketService;
-// import org.springframework.security.access.prepost.PreAuthorize;
-import mg.tommy.springboot.springbootwebapp.service.library.UserService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -12,11 +10,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class PageController {
 
     private MarketService marketService;
-    private UserService userService;
 
-    public PageController(MarketService marketService, UserService userService) {
+    public PageController(MarketService marketService) {
         this.marketService = marketService;
-        this.userService = userService;
     }
 
     @PreAuthorize("hasRole('GUEST') || hasRole('CLIENT') || hasAuthority('READER') || hasAuthority('ROLE_ADMIN')")

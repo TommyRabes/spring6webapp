@@ -82,15 +82,23 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.thymeleaf.extras</groupId>
 			<artifactId>thymeleaf-extras-springsecurity6</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
 		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -132,12 +140,24 @@
 			</plugin>
 		</plugins>
 
+		<!--
+			The element "filtering" needs to be set to true
+			in order to enable placeholders processing by Maven
+			during the process-resources/process-test-resources phase
+		-->
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
 				<filtering>true</filtering>
 			</resource>
 		</resources>
+
+		<testResources>
+			<testResource>
+				<directory>src/test/resources</directory>
+				<filtering>true</filtering>
+			</testResource>
+		</testResources>
 	</build>
 
 	<profiles>
@@ -225,6 +245,25 @@
 			<properties>
 				<spring.database.profiles>mssql-mysql</spring.database.profiles>
 				<spring.database.init.platform>mssql</spring.database.init.platform>
+			</properties>
+		</profile>
+
+		<profile>
+			<id>basic-security</id>
+			<properties>
+				<spring.security.profile>http-basic</spring.security.profile>
+			</properties>
+		</profile>
+		<profile>
+			<id>oauth2-security</id>
+			<properties>
+				<spring.security.profile>oauth2</spring.security.profile>
+			</properties>
+		</profile>
+		<profile>
+			<id>form-login</id>
+			<properties>
+				<spring.security.profile>form-login</spring.security.profile>
 			</properties>
 		</profile>
 	</profiles>

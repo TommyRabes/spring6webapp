@@ -1,7 +1,9 @@
 package mg.tommy.springboot.springbootwebapp.controller.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import mg.tommy.springboot.springbootwebapp.controller.api.testconfig.MockedBean;
+import mg.tommy.springboot.springbootwebapp.configuration.web.SecurityConfig;
+import mg.tommy.springboot.springbootwebapp.controller.ControllerBaseTest;
 import mg.tommy.springboot.springbootwebapp.model.domain.embedded.BeerStyle;
 import mg.tommy.springboot.springbootwebapp.model.dto.BeerDto;
 import mg.tommy.springboot.springbootwebapp.service.brewing.BeerService;
@@ -11,40 +13,36 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.h2.H2ConsoleProperties;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.ResultMatcher;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static java.util.Optional.empty;
 import static mg.tommy.springboot.springbootwebapp.controller.api.BeerApiController.ROOT_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.collection.IsIterableWithSize.iterableWithSize;
+import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.StringContains.containsStringIgnoringCase;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.hamcrest.core.Is.is;
 
 @WebMvcTest(
-        controllers = { BeerApiController.class },
-        excludeAutoConfiguration = { SecurityAutoConfiguration.class }
+        controllers = { BeerApiController.class }
 )
 /**
  * For some reason, this annotation is necessary despite specifying the controller being tested in @WebMvcTest
@@ -54,8 +52,17 @@ import static org.hamcrest.core.Is.is;
  * Nonetheless it seems to work fine when we explicitly add the class through @Import annotation
  * Does it mean MockMvc is somehow able to mimic Spring Boot's behaviour (at least the error handling part) ?
  */
-@Import({ BeerApiController.class, ControllerExceptionHandler.class })
-class BeerApiControllerTest {
+@Import({
+        BeerApiController.class,
+        ControllerExceptionHandler.class,
+        SecurityConfig.class,
+        // Force import this bean in the context, since it won't be picked up by the @WebMvcTest test splice
+        // Required for a SecurityFilterChain bean in the SecurityConfig configuration class
+        // We are assuming we are always using H2 for test
+        H2ConsoleProperties.class,
+        MockedBean.class
+})
+class BeerApiControllerTest extends ControllerBaseTest {
     private static final BeerDto GALAXY = BeerDto.builder()
             .id(UUID.randomUUID())
             .version(1)
@@ -118,12 +125,8 @@ class BeerApiControllerTest {
     @Autowired
     MockMvc mockMvc;
 
-    /**
-     * Spring ships its own Jackson ObjetMapper bean
-     * with some sensible defaults set beforehand
-     */
     @Autowired
-    ObjectMapper objectMapper;
+    RequestPostProcessor mvcSecurityPostProcessor;
 
     @MockBean
     BeerService beerService;
@@ -134,11 +137,21 @@ class BeerApiControllerTest {
     @Captor
     ArgumentCaptor<BeerDto> beerArgumentCaptor;
 
+    /**
+     * Spring ships its own Jackson ObjetMapper bean
+     * with some sensible defaults set beforehand
+     */
+    @Autowired
+    public BeerApiControllerTest(ObjectMapper objectMapper) {
+        super(objectMapper);
+    }
+
     @Test
     public void findAllBeerTest() throws Exception {
         given(beerService.find(null, null, false, null, null)).willReturn(new PageImpl<>(Lists.list(GALAXY, SUNSHINE)));
 
-        mockMvc.perform(get(ROOT_PATH).accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get(ROOT_PATH).accept(MediaType.APPLICATION_JSON)
+                        .with(mvcSecurityPostProcessor()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.content.length()", is(2)));
@@ -148,7 +161,8 @@ class BeerApiControllerTest {
     public void getBeerByIdTest() throws Exception {
         given(beerService.findById(GALAXY.getId())).willReturn(Optional.of(GALAXY));
 
-        mockMvc.perform(get(UUID_PATH, GALAXY.getId()).accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get(UUID_PATH, GALAXY.getId()).accept(MediaType.APPLICATION_JSON)
+                        .with(mvcSecurityPostProcessor()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id", is(GALAXY.getId().toString())))
@@ -161,7 +175,8 @@ class BeerApiControllerTest {
     public void getBeerByIdNotFoundTest() throws Exception {
         given(beerService.findById(any(UUID.class))).willReturn(empty());
 
-        mockMvc.perform(get(UUID_PATH, UUID.randomUUID()))
+        mockMvc.perform(get(UUID_PATH, UUID.randomUUID())
+                        .with(mvcSecurityPostProcessor()))
                 .andExpect(status().isNotFound());
     }
 
@@ -184,7 +199,7 @@ class BeerApiControllerTest {
 
         given(beerService.save(any(BeerDto.class))).willReturn(MANGO);
 
-        mockMvc.perform(saveBeerRequest(beerDto))
+        mockMvc.perform(saveRequest(beerDto))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andExpect(header().string("Location", "/api/v1/beers/" + MANGO.getId()));
@@ -196,7 +211,7 @@ class BeerApiControllerTest {
 
         given(beerService.save(any(BeerDto.class))).willReturn(SUNSHINE);
 
-        mockMvc.perform(saveBeerRequest(beerDto))
+        mockMvc.perform(saveRequest(beerDto))
                 .andExpect(status().isBadRequest())
                 .andExpectAll(fieldsErrors(2, 1, 2, 0, 1));
 
@@ -207,11 +222,11 @@ class BeerApiControllerTest {
     public void saveBeerWithInvalidFieldsTest() throws Exception {
         given(beerService.save(any(BeerDto.class))).willReturn(SUNSHINE);
 
-        mockMvc.perform(saveBeerRequest(STR_INVALID_BEER_MAP))
+        mockMvc.perform(saveRequest(STR_INVALID_BEER_MAP))
                 .andExpect(status().isBadRequest())
                 .andExpectAll(fieldsErrors(1, 1, 1, 0, 0));
 
-        mockMvc.perform(saveBeerRequest(VALUES_OUT_OF_BOUND_BEER_MAP))
+        mockMvc.perform(saveRequest(VALUES_OUT_OF_BOUND_BEER_MAP))
                 .andExpect(status().isBadRequest())
                 .andExpectAll(fieldsErrors(1, 0, 1, 1, 1));
 
@@ -226,7 +241,7 @@ class BeerApiControllerTest {
     public void saveBeerWithTypeMismatchTest() throws Exception {
         given(beerService.save(any(BeerDto.class))).willReturn(SUNSHINE);
 
-        mockMvc.perform(saveBeerRequest(TYPE_MISMATCH_BEER_MAP))
+        mockMvc.perform(saveRequest(TYPE_MISMATCH_BEER_MAP))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.type", is("TypeMismatching")))
                 .andExpect(jsonPath("$.message", containsStringIgnoringCase("conversion failed")));
@@ -246,7 +261,7 @@ class BeerApiControllerTest {
 
         given(beerService.overwriteById(eq(MANGO.getId()), eq(beerDto))).willReturn(Optional.of(mock(BeerDto.class)));
 
-        mockMvc.perform(updateBeerRequest(MANGO.getId(), beerDto))
+        mockMvc.perform(updateRequest(MANGO.getId(), beerDto))
                 .andExpect(status().isNoContent());
 
         verify(beerService).overwriteById(any(UUID.class), any(BeerDto.class));
@@ -258,7 +273,7 @@ class BeerApiControllerTest {
 
         BeerDto beerDto = BeerDto.builder().build();
 
-        mockMvc.perform(updateBeerRequest(MANGO.getId(), beerDto))
+        mockMvc.perform(updateRequest(MANGO.getId(), beerDto))
                 .andExpect(status().isBadRequest())
                 .andExpectAll(fieldsErrors(2, 1, 2, 0, 1));
 
@@ -269,11 +284,11 @@ class BeerApiControllerTest {
     public void updateByIdWithInvalidFieldsTest() throws Exception {
         given(beerService.overwriteById(any(UUID.class), any(BeerDto.class))).willReturn(Optional.of(mock(BeerDto.class)));
 
-        mockMvc.perform(updateBeerRequest(MANGO.getId(), STR_INVALID_BEER_MAP))
+        mockMvc.perform(updateRequest(MANGO.getId(), STR_INVALID_BEER_MAP))
                 .andExpect(status().isBadRequest())
                 .andExpectAll(fieldsErrors(1, 1, 1, 0, 0));
 
-        mockMvc.perform(updateBeerRequest(MANGO.getId(), VALUES_OUT_OF_BOUND_BEER_MAP))
+        mockMvc.perform(updateRequest(MANGO.getId(), VALUES_OUT_OF_BOUND_BEER_MAP))
                 .andExpect(status().isBadRequest())
                 .andExpectAll(fieldsErrors(1, 0, 1, 1, 1));
 
@@ -284,7 +299,7 @@ class BeerApiControllerTest {
     public void updateByIdWithTypeMismatchTest() throws Exception {
         given(beerService.overwriteById(any(UUID.class), any(BeerDto.class))).willReturn(Optional.of(mock(BeerDto.class)));
 
-        mockMvc.perform(updateBeerRequest(MANGO.getId(), TYPE_MISMATCH_BEER_MAP))
+        mockMvc.perform(updateRequest(MANGO.getId(), TYPE_MISMATCH_BEER_MAP))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.type", is("TypeMismatching")))
                 .andExpect(jsonPath("$.message", containsStringIgnoringCase("conversion failed")));
@@ -304,7 +319,7 @@ class BeerApiControllerTest {
                 .price(new BigDecimal("19.99"))
                 .build();
 
-        mockMvc.perform(updateBeerRequest(UUID.randomUUID(), beerDto))
+        mockMvc.perform(updateRequest(UUID.randomUUID(), beerDto))
                 .andExpect(status().isNotFound());
 
         verify(beerService).overwriteById(any(UUID.class), any(BeerDto.class));
@@ -315,7 +330,8 @@ class BeerApiControllerTest {
         given(beerService.deleteById(any(UUID.class))).willReturn(true);
 
         mockMvc.perform(delete(UUID_PATH, MANGO.getId())
-                        .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON)
+                        .with(mvcSecurityPostProcessor()))
                 .andExpect(status().isNoContent());
 
         ArgumentCaptor<UUID> uuidArgumentCaptor = ArgumentCaptor.forClass(UUID.class);
@@ -329,7 +345,8 @@ class BeerApiControllerTest {
         given(beerService.deleteById(any(UUID.class))).willReturn(false);
 
         mockMvc.perform(delete(UUID_PATH, MANGO.getId())
-                        .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON)
+                        .with(mvcSecurityPostProcessor()))
                 /*
                  * In hindsight, a real unit test should just test whether the method throw an exception
                  * Here, the NOT_FOUND status is returned by a @ControllerAdvice annotated class (not really 'unity')
@@ -351,7 +368,7 @@ class BeerApiControllerTest {
 
         given(beerService.updateById(any(UUID.class), any(BeerDto.class))).willReturn(Optional.of(mock(BeerDto.class)));
 
-        mockMvc.perform(patchBeerRequest(MANGO.getId(), beerMap))
+        mockMvc.perform(patchRequest(MANGO.getId(), beerMap))
                 .andExpect(status().isNoContent());
 
         verify(beerService).updateById(uuidArgumentCaptor.capture(), beerArgumentCaptor.capture());
@@ -363,11 +380,11 @@ class BeerApiControllerTest {
     public void patchByIdWithInvalidFieldsTest() throws Exception {
         given(beerService.updateById(any(UUID.class), any(BeerDto.class))).willReturn(Optional.of(mock(BeerDto.class)));
 
-        mockMvc.perform(patchBeerRequest(MANGO.getId(), STR_INVALID_BEER_MAP))
+        mockMvc.perform(patchRequest(MANGO.getId(), STR_INVALID_BEER_MAP))
                 .andExpect(status().isBadRequest())
                 .andExpectAll(fieldsErrors(1, 1, 1, 0, 0));
 
-        mockMvc.perform(patchBeerRequest(MANGO.getId(), VALUES_OUT_OF_BOUND_BEER_MAP))
+        mockMvc.perform(patchRequest(MANGO.getId(), VALUES_OUT_OF_BOUND_BEER_MAP))
                 .andExpect(status().isBadRequest())
                 .andExpectAll(fieldsErrors(1, 0, 1, 1, 1));
 
@@ -381,7 +398,7 @@ class BeerApiControllerTest {
 
         given(beerService.updateById(any(UUID.class), any(BeerDto.class))).willReturn(Optional.empty());
 
-        mockMvc.perform(patchBeerRequest(MANGO.getId(), beerMap))
+        mockMvc.perform(patchRequest(MANGO.getId(), beerMap))
                 .andExpect(status().isNotFound());
 
         verify(beerService).updateById(uuidArgumentCaptor.capture(), beerArgumentCaptor.capture());
@@ -390,36 +407,28 @@ class BeerApiControllerTest {
         assertThat(beerArgumentCaptor.getValue().getBeerName()).isEqualTo(beerMap.get("beerName"));
     }
 
-    private RequestBuilder saveBeerRequest(Object requestBody) throws JsonProcessingException {
-        return post(ROOT_PATH)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestBody));
-    }
-
-    private MockHttpServletRequestBuilder updateBeerRequest(UUID uuid, Object requestBody) throws JsonProcessingException {
-        return put(UUID_PATH, uuid)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestBody));
-    }
-
-    private MockHttpServletRequestBuilder patchBeerRequest(UUID uuid, Object requestBody) throws JsonProcessingException {
-        return patch(UUID_PATH, uuid)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestBody));
-    }
-
-    private ResultMatcher[] fieldsErrors(int beerName, int beerStyle, int upc, int quantityOnHand, int price) {
+    @Override
+    protected ResultMatcher[] fieldsErrors(int... errorCount) {
+        if (errorCount.length != 5) {
+            throw new IllegalArgumentException("Expect 5 arguments for 'beerName', 'beerStyle', 'upc', 'quantityOnHand', 'price' but got " + errorCount.length);
+        }
         return new ResultMatcher[] {
-                jsonPath("$.length()", is(beerName + beerStyle + upc + quantityOnHand + price)),
-                jsonPath("$..beerName", iterableWithSize(beerName)),
-                jsonPath("$..beerStyle", iterableWithSize(beerStyle)),
-                jsonPath("$..upc", iterableWithSize(upc)),
-                jsonPath("$..quantityOnHand", iterableWithSize(quantityOnHand)),
-                jsonPath("$..price", iterableWithSize(price))
-            };
+                jsonPath("$.length()", is(Arrays.stream(errorCount).sum())),
+                jsonPath("$..beerName", iterableWithSize(errorCount[0])),
+                jsonPath("$..beerStyle", iterableWithSize(errorCount[1])),
+                jsonPath("$..upc", iterableWithSize(errorCount[2])),
+                jsonPath("$..quantityOnHand", iterableWithSize(errorCount[3])),
+                jsonPath("$..price", iterableWithSize(errorCount[4]))
+        };
     }
 
+    @Override
+    protected String rootPath() {
+        return ROOT_PATH;
+    }
+
+    @Override
+    protected RequestPostProcessor mvcSecurityPostProcessor() {
+        return mvcSecurityPostProcessor;
+    }
 }

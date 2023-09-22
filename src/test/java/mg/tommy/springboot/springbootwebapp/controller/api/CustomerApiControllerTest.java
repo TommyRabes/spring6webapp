@@ -1,7 +1,9 @@
 package mg.tommy.springboot.springbootwebapp.controller.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import mg.tommy.springboot.springbootwebapp.controller.api.testconfig.MockedBean;
+import mg.tommy.springboot.springbootwebapp.configuration.web.SecurityConfig;
+import mg.tommy.springboot.springbootwebapp.controller.ControllerBaseTest;
 import mg.tommy.springboot.springbootwebapp.model.dto.CustomerDto;
 import mg.tommy.springboot.springbootwebapp.service.library.CustomerService;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,22 +11,18 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.h2.H2ConsoleProperties;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.ResultMatcher;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static java.util.Optional.empty;
 import static mg.tommy.springboot.springbootwebapp.controller.api.CustomerApiController.ROOT_PATH;
@@ -38,17 +36,24 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(
-        controllers = CustomerApiController.class,
-        excludeAutoConfiguration = {
-                SecurityAutoConfiguration.class
-        }
+        controllers = CustomerApiController.class
 )
-@Import({ CustomerApiController.class, ControllerExceptionHandler.class })
-class CustomerApiControllerTest {
+@Import({
+        CustomerApiController.class,
+        ControllerExceptionHandler.class,
+        SecurityConfig.class,
+        // Force import this bean in the context, since it won't be picked up by the @WebMvcTest test splice
+        // Required for a SecurityFilterChain bean in the SecurityConfig configuration class
+        // We are assuming we are always using H2 for test
+        H2ConsoleProperties.class,
+        MockedBean.class
+})
+class CustomerApiControllerTest extends ControllerBaseTest {
     private static final CustomerDto BAILEY = CustomerDto.builder()
             .id(UUID.randomUUID())
             .version(1)
@@ -96,7 +101,7 @@ class CustomerApiControllerTest {
     MockMvc mockMvc;
 
     @Autowired
-    ObjectMapper objectMapper;
+    RequestPostProcessor mvcSecurityPostProcessor;
 
     @MockBean
     CustomerService customerService;
@@ -106,6 +111,11 @@ class CustomerApiControllerTest {
 
     @Captor
     ArgumentCaptor<CustomerDto> customerArgumentCaptor;
+
+    @Autowired
+    public CustomerApiControllerTest(ObjectMapper objectMapper) {
+        super(objectMapper);
+    }
 
     @BeforeEach
     public void arrange() {
@@ -118,7 +128,8 @@ class CustomerApiControllerTest {
         final String baileyFilter = "$[?(@.id == '" + BAILEY.getId() + "')]";
         final String bookerFilter = "$[?(@.id == '" + BOOKER.getId() + "')]";
 
-        mockMvc.perform(MockMvcRequestBuilders.get(ROOT_PATH).accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get(ROOT_PATH).accept(MediaType.APPLICATION_JSON)
+                        .with(mvcSecurityPostProcessor()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()", is(2)))
@@ -140,7 +151,8 @@ class CustomerApiControllerTest {
 
     @Test
     void getCustomerByUUIDTest() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get(UUID_PATH, BAILEY.getId()).accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get(UUID_PATH, BAILEY.getId()).accept(MediaType.APPLICATION_JSON)
+                        .with(mvcSecurityPostProcessor()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id", is(BAILEY.getId().toString())))
@@ -154,7 +166,8 @@ class CustomerApiControllerTest {
     public void getCustomerUUIDNotFoundTest() throws Exception {
         given(customerService.findById(any(UUID.class))).willReturn(empty());
 
-        mockMvc.perform(get(UUID_PATH, UUID.randomUUID()))
+        mockMvc.perform(get(UUID_PATH, UUID.randomUUID())
+                        .with(mvcSecurityPostProcessor()))
                 .andExpect(status().isNotFound());
     }
 
@@ -167,7 +180,7 @@ class CustomerApiControllerTest {
 
         given(customerService.save(any(CustomerDto.class))).willReturn(SHERLEY);
 
-        mockMvc.perform(saveCustomerRequest(customerDto))
+        mockMvc.perform(saveRequest(customerDto))
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", ROOT_PATH + "/" + SHERLEY.getId()))
                 .andExpect(jsonPath("$.id", is(SHERLEY.getId().toString())))
@@ -183,9 +196,9 @@ class CustomerApiControllerTest {
 
         given(customerService.save(any(CustomerDto.class))).willReturn(SHERLEY);
 
-        mockMvc.perform(saveCustomerRequest(customerDto))
+        mockMvc.perform(saveRequest(customerDto))
                 .andExpect(status().isBadRequest())
-                .andExpectAll(fieldErrors(2, 2, 2, 1));
+                .andExpectAll(fieldsErrors(2, 2, 2, 1));
 
         verifyNoInteractions(customerService);
     }
@@ -194,13 +207,13 @@ class CustomerApiControllerTest {
     public void saveCustomerWithInvalidFieldsTest() throws Exception {
         given(customerService.save(any(CustomerDto.class))).willReturn(SHERLEY);
 
-        mockMvc.perform(saveCustomerRequest(INVALID_CUSTOMER))
+        mockMvc.perform(saveRequest(INVALID_CUSTOMER))
                 .andExpect(status().isBadRequest())
-                .andExpectAll(fieldErrors(1, 1, 1, 1));
+                .andExpectAll(fieldsErrors(1, 1, 1, 1));
 
-        mockMvc.perform(saveCustomerRequest(INVALID_CUSTOMER.toBuilder().birthdate(LocalDate.now().minusYears(18)).build()))
+        mockMvc.perform(saveRequest(INVALID_CUSTOMER.toBuilder().birthdate(LocalDate.now().minusYears(18)).build()))
                 .andExpect(status().isBadRequest())
-                .andExpectAll(fieldErrors(1, 1, 1, 0));
+                .andExpectAll(fieldsErrors(1, 1, 1, 0));
 
         verifyNoInteractions(customerService);
     }
@@ -209,7 +222,7 @@ class CustomerApiControllerTest {
     public void saveCustomerWithTypeMismatchTest() throws Exception {
         given(customerService.save(any(CustomerDto.class))).willReturn(SHERLEY);
 
-        mockMvc.perform(saveCustomerRequest(UNDESERIALIZABLE_CUSTOMER))
+        mockMvc.perform(saveRequest(UNDESERIALIZABLE_CUSTOMER))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.type", is("TypeMismatching")))
                 .andExpect(jsonPath("$.message", containsString("conversion failed")));
@@ -230,7 +243,7 @@ class CustomerApiControllerTest {
 
         given(customerService.overwriteById(eq(SHERLEY.getId()), eq(customerDto))).willReturn(Optional.of(mock(CustomerDto.class)));
 
-        mockMvc.perform(updateCustomerRequest(SHERLEY.getId(), customerDto))
+        mockMvc.perform(updateRequest(SHERLEY.getId(), customerDto))
                 .andExpect(status().isNoContent());
 
         verify(customerService).overwriteById(eq(SHERLEY.getId()), eq(customerDto));
@@ -242,9 +255,9 @@ class CustomerApiControllerTest {
 
         CustomerDto customerDto = CustomerDto.builder().build();
 
-        mockMvc.perform(updateCustomerRequest(SHERLEY.getId(), customerDto))
+        mockMvc.perform(updateRequest(SHERLEY.getId(), customerDto))
                 .andExpect(status().isBadRequest())
-                .andExpectAll(fieldErrors(2, 2, 2, 1));
+                .andExpectAll(fieldsErrors(2, 2, 2, 1));
 
         verifyNoInteractions(customerService);
     }
@@ -253,9 +266,9 @@ class CustomerApiControllerTest {
     public void updateCustomerWithInvalidFieldsTest() throws Exception {
         given(customerService.overwriteById(any(UUID.class), any(CustomerDto.class))).willReturn(Optional.of(mock(CustomerDto.class)));
 
-        mockMvc.perform(updateCustomerRequest(SHERLEY.getId(), INVALID_CUSTOMER))
+        mockMvc.perform(updateRequest(SHERLEY.getId(), INVALID_CUSTOMER))
                 .andExpect(status().isBadRequest())
-                .andExpectAll(fieldErrors(1, 1, 1, 1));
+                .andExpectAll(fieldsErrors(1, 1, 1, 1));
 
         verifyNoInteractions(customerService);
     }
@@ -264,7 +277,7 @@ class CustomerApiControllerTest {
     public void updateCustomerWithTypeMismatchTest() throws Exception {
         given(customerService.overwriteById(any(UUID.class), any(CustomerDto.class))).willReturn(Optional.of(mock(CustomerDto.class)));
 
-        mockMvc.perform(updateCustomerRequest(SHERLEY.getId(), UNDESERIALIZABLE_CUSTOMER))
+        mockMvc.perform(updateRequest(SHERLEY.getId(), UNDESERIALIZABLE_CUSTOMER))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.type", is("TypeMismatching")))
                 .andExpect(jsonPath("$.message", containsString("conversion failed")));
@@ -285,7 +298,7 @@ class CustomerApiControllerTest {
 
         given(customerService.overwriteById(any(UUID.class), eq(customerDto))).willReturn(Optional.empty());
 
-        mockMvc.perform(updateCustomerRequest(UUID.randomUUID(), customerDto))
+        mockMvc.perform(updateRequest(UUID.randomUUID(), customerDto))
                 .andExpect(status().isNotFound());
 
         verify(customerService).overwriteById(any(UUID.class), eq(customerDto));
@@ -296,7 +309,8 @@ class CustomerApiControllerTest {
         given(customerService.deleteById(any(UUID.class))).willReturn(true);
 
         mockMvc.perform(delete(UUID_PATH, SHERLEY.getId())
-                        .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON)
+                        .with(mvcSecurityPostProcessor()))
                 .andExpect(status().isNoContent());
 
         verify(customerService).deleteById(uuidArgumentCaptor.capture());
@@ -309,7 +323,8 @@ class CustomerApiControllerTest {
         given(customerService.deleteById(any(UUID.class))).willReturn(false);
 
         mockMvc.perform(delete(UUID_PATH, SHERLEY.getId())
-                        .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON)
+                        .with(mvcSecurityPostProcessor()))
                 .andExpect(status().isNotFound());
 
         verify(customerService).deleteById(uuidArgumentCaptor.capture());
@@ -325,7 +340,7 @@ class CustomerApiControllerTest {
 
         given(customerService.updateById(any(UUID.class), any(CustomerDto.class))).willReturn(Optional.of(mock(CustomerDto.class)));
 
-        mockMvc.perform(patchCustomerRequest(SHERLEY.getId(), customerMap))
+        mockMvc.perform(patchRequest(SHERLEY.getId(), customerMap))
                 .andExpect(status().isNoContent());
 
         verify(customerService).updateById(uuidArgumentCaptor.capture(), customerArgumentCaptor.capture());
@@ -338,9 +353,9 @@ class CustomerApiControllerTest {
     public void patchCustomerWithInvalidFieldsTest() throws Exception {
         given(customerService.updateById(any(UUID.class), any(CustomerDto.class))).willReturn(Optional.of(mock(CustomerDto.class)));
 
-        mockMvc.perform(patchCustomerRequest(SHERLEY.getId(), INVALID_CUSTOMER))
+        mockMvc.perform(patchRequest(SHERLEY.getId(), INVALID_CUSTOMER))
                 .andExpect(status().isBadRequest())
-                .andExpectAll(fieldErrors(1, 1, 1, 1));
+                .andExpectAll(fieldsErrors(1, 1, 1, 1));
 
         verifyNoInteractions(customerService);
     }
@@ -349,7 +364,7 @@ class CustomerApiControllerTest {
     public void patchCustomerWithTypeMismatchTest() throws Exception {
         given(customerService.updateById(any(UUID.class), any(CustomerDto.class))).willReturn(Optional.of(mock(CustomerDto.class)));
 
-        mockMvc.perform(patchCustomerRequest(SHERLEY.getId(), UNDESERIALIZABLE_CUSTOMER))
+        mockMvc.perform(patchRequest(SHERLEY.getId(), UNDESERIALIZABLE_CUSTOMER))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.type", is("TypeMismatching")))
                 .andExpect(jsonPath("$.message", containsString("conversion failed")));
@@ -365,7 +380,7 @@ class CustomerApiControllerTest {
 
         given(customerService.updateById(any(UUID.class), any(CustomerDto.class))).willReturn(Optional.empty());
 
-        mockMvc.perform(patchCustomerRequest(SHERLEY.getId(), customerMap))
+        mockMvc.perform(patchRequest(SHERLEY.getId(), customerMap))
                 .andExpect(status().isNotFound());
 
         verify(customerService).updateById(uuidArgumentCaptor.capture(), customerArgumentCaptor.capture());
@@ -374,34 +389,27 @@ class CustomerApiControllerTest {
         assertThat(customerArgumentCaptor.getValue()).isEqualTo(customerDto);
     }
 
-    private RequestBuilder saveCustomerRequest(Object requestBody) throws JsonProcessingException {
-        return post(ROOT_PATH)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestBody));
-    }
-
-    private RequestBuilder updateCustomerRequest(UUID uuid, Object requestBody) throws JsonProcessingException {
-        return put(UUID_PATH, uuid)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestBody));
-    }
-
-    private RequestBuilder patchCustomerRequest(UUID uuid, Object requestBody) throws JsonProcessingException {
-        return patch(UUID_PATH, uuid)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestBody));
-    }
-
-    private ResultMatcher[] fieldErrors(int firstName, int lastName, int email, int birthdate) {
+    @Override
+    protected ResultMatcher[] fieldsErrors(int... errorCount) {
+        if (errorCount.length != 4) {
+            throw new IllegalArgumentException("Expect 4 arguments for 'firstName', 'lastName', 'email', 'birthdate' but got " + errorCount.length);
+        }
         return new ResultMatcher[] {
-                jsonPath("$.length()", is(firstName + lastName + email + birthdate)),
-                jsonPath("$..firstName", iterableWithSize(firstName)),
-                jsonPath("$..lastName", iterableWithSize(lastName)),
-                jsonPath("$..email", iterableWithSize(email)),
-                jsonPath("$..birthdate", iterableWithSize(birthdate))
-            };
+                jsonPath("$.length()", is(Arrays.stream(errorCount).sum())),
+                jsonPath("$..firstName", iterableWithSize(errorCount[0])),
+                jsonPath("$..lastName", iterableWithSize(errorCount[1])),
+                jsonPath("$..email", iterableWithSize(errorCount[2])),
+                jsonPath("$..birthdate", iterableWithSize(errorCount[3]))
+        };
+    }
+
+    @Override
+    protected String rootPath() {
+        return ROOT_PATH;
+    }
+
+    @Override
+    protected RequestPostProcessor mvcSecurityPostProcessor() {
+        return mvcSecurityPostProcessor;
     }
 }

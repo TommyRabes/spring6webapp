@@ -1,9 +1,11 @@
 package mg.tommy.springboot.springbootwebapp.configuration.web;
 
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -33,18 +35,39 @@ public class SecurityConfig {
     @Bean
     @Order(1)
     public SecurityFilterChain h2FilterChain(HttpSecurity securityBuilder) throws Exception {
+        PathRequest.H2ConsoleRequestMatcher h2ConsoleRequestMatcher = toH2Console();
         securityBuilder
-                .securityMatcher(toH2Console())
+                .securityMatcher(h2ConsoleRequestMatcher)
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers(toH2Console()).permitAll()
+                        .requestMatchers(h2ConsoleRequestMatcher).permitAll()
                 )
                 // Allows access to H2 console without Spring Security extra checks
-                .csrf(csrf -> csrf.ignoringRequestMatchers(toH2Console()))
+                .csrf(csrf -> csrf.ignoringRequestMatchers(h2ConsoleRequestMatcher))
                 .headers(headers -> headers.frameOptions(frameOptionsConfig -> frameOptionsConfig.sameOrigin()));
 
         return securityBuilder.build();
     }
 
+    @Profile("http-basic")
+    @Bean
+    public SecurityFilterChain restfulApiFilterChain(HttpSecurity securityBuilder) throws Exception {
+        securityBuilder
+                .authorizeHttpRequests(requests -> requests.anyRequest().authenticated())
+                .httpBasic(Customizer.withDefaults())
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"));
+        return securityBuilder.build();
+    }
+
+    @Profile("oauth2")
+    @Bean
+    public SecurityFilterChain oauth2FilterChain(HttpSecurity securityBuilder) throws Exception {
+        securityBuilder
+                .authorizeHttpRequests(requests -> requests.anyRequest().authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+        return securityBuilder.build();
+    }
+
+    @Profile("form-login")
     @Bean
     public SecurityFilterChain routeAccessFilterChain(HttpSecurity securityBuilder) throws Exception {
         securityBuilder

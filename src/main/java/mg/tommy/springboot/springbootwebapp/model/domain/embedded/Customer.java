@@ -58,6 +58,6 @@ public class Customer {
     private LocalDateTime updateDate;
 
     @Builder.Default
-    @OneToMany(mappedBy = "customer")
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.REMOVE)
     private Set<BeerOrder> beerOrders = new HashSet<>();
 }

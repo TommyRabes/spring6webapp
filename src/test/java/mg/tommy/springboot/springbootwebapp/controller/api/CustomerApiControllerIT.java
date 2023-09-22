@@ -4,12 +4,16 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import mg.tommy.springboot.springbootwebapp.controller.api.testconfig.MockedBean;
 import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Customer;
 import mg.tommy.springboot.springbootwebapp.model.dto.CustomerDto;
+import mg.tommy.springboot.springbootwebapp.repository.embedded.BeerOrderRepository;
+import mg.tommy.springboot.springbootwebapp.repository.embedded.BeerOrderShipmentRepository;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.CustomerRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.Rollback;
@@ -29,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
 @SpringBootTest
+@Import(MockedBean.class)
 class CustomerApiControllerIT {
 
     @Autowired
@@ -36,6 +41,12 @@ class CustomerApiControllerIT {
 
     @Autowired
     CustomerRepository customerRepository;
+
+    @Autowired
+    BeerOrderRepository beerOrderRepository;
+
+    @Autowired
+    BeerOrderShipmentRepository beerOrderShipmentRepository;
 
     @PersistenceContext
     EntityManager entityManager;
@@ -51,6 +62,7 @@ class CustomerApiControllerIT {
     @Rollback
     @Test
     public void listEmptyCustomerListTest() {
+        beerOrderRepository.deleteAll();
         customerRepository.deleteAll();
         Iterable<CustomerDto> customers = customerApiController.listAllCustomers();
 

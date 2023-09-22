@@ -35,7 +35,7 @@ public class BeerOrder {
     @UpdateTimestamp
     private Timestamp lastModifiedDate;
 
-    @OneToOne(cascade = CascadeType.PERSIST)
+    @OneToOne(cascade = { CascadeType.PERSIST, CascadeType.REMOVE })
     private BeerOrderShipment beerOrderShipment;
 
     @ManyToOne

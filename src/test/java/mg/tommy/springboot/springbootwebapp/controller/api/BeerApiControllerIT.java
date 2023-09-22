@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import mg.tommy.springboot.springbootwebapp.controller.api.testconfig.MockedBean;
 import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Beer;
 import mg.tommy.springboot.springbootwebapp.model.domain.embedded.BeerStyle;
 import mg.tommy.springboot.springbootwebapp.model.dto.BeerDto;
@@ -12,12 +13,14 @@ import mg.tommy.springboot.springbootwebapp.repository.embedded.BeerRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.annotation.Propagation;
@@ -41,14 +44,19 @@ import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Import(MockedBean.class)
 class BeerApiControllerIT {
-
+    @Autowired
+    RequestPostProcessor mvcSecurityProcessor;
+    
     @Autowired
     BeerApiController beerApiController;
 
@@ -71,6 +79,13 @@ class BeerApiControllerIT {
     WebApplicationContext webApplicationContext;
 
     MockMvc mockMvc;
+
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(springSecurity())
+                .build();
+    }
 
     @Test
     @Order(2)
@@ -124,10 +139,24 @@ class BeerApiControllerIT {
     }
 
     @Test
-    public void findBeersByEmptyNameTest() throws Exception {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-
+    public void authenticationTest() throws Exception {
         mockMvc.perform(get(ROOT_PATH)
+                        .queryParam("beerName", ""))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void authenticationFailureTest() throws Exception {
+        mockMvc.perform(get(ROOT_PATH)
+                        .with(httpBasic("Wrong username", "WrongPassword"))
+                        .queryParam("beerName", ""))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void findBeersByEmptyNameTest() throws Exception {
+        mockMvc.perform(get(ROOT_PATH)
+                        .with(mvcSecurityProcessor)
                         .queryParam("beerName", ""))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()", is(25)))
@@ -136,9 +165,8 @@ class BeerApiControllerIT {
 
     @Test
     public void findBeersByNameTest() throws Exception {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-
         mockMvc.perform(get(ROOT_PATH)
+                        .with(mvcSecurityProcessor)
                         .queryParam("beerName", "IPA"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()", is(25)))
@@ -147,9 +175,8 @@ class BeerApiControllerIT {
 
     @Test
     public void findBeersByStyleTest() throws Exception {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-
         mockMvc.perform(get(ROOT_PATH)
+                        .with(mvcSecurityProcessor)
                         .queryParam("beerStyle", LAGER.name()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()", is(25)))
@@ -158,18 +185,16 @@ class BeerApiControllerIT {
 
     @Test
     public void findBeersByBadStyleTest() throws Exception {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-
         mockMvc.perform(get(ROOT_PATH)
+                        .with(mvcSecurityProcessor)
                         .queryParam("beerStyle", "STDOUT"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     public void findBeersByNameAndStyleTest() throws Exception {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-
         mockMvc.perform(get(ROOT_PATH)
+                        .with(mvcSecurityProcessor)
                         .queryParam("beerName", "IPA")
                         .queryParam("beerStyle", IPA.name()))
                 .andExpect(status().isOk())
@@ -179,11 +204,10 @@ class BeerApiControllerIT {
 
     @Test
     public void findBeersByNameAndStyleShowInventoryTest() throws Exception {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-
         final int expectedMatch = 324;
         final int returnedMatch = 25;
         ResultActions resultActions = mockMvc.perform(get(ROOT_PATH)
+                        .with(mvcSecurityProcessor)
                         .queryParam("beerName", "IPA")
                         .queryParam("beerStyle", IPA.name())
                         .queryParam("showInventory", TRUE.toString()))
@@ -197,11 +221,10 @@ class BeerApiControllerIT {
 
     @Test
     public void findBeersByNameAndStyleNotShowInventoryTest() throws Exception {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-
         final int expectedMatch = 324;
         final int returnedMatch = 25;
         ResultActions resultActions = mockMvc.perform(get(ROOT_PATH)
+                        .with(mvcSecurityProcessor)
                         .queryParam("beerName", "IPA")
                         .queryParam("beerStyle", IPA.name()))
                 .andExpect(status().isOk())
@@ -214,9 +237,8 @@ class BeerApiControllerIT {
 
     @Test
     public void findBeersByNameAndStylePage1Test() throws Exception {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-
         mockMvc.perform(get(ROOT_PATH)
+                        .with(mvcSecurityProcessor)
                         .queryParam("beerName", "IPA")
                         .queryParam("beerStyle", IPA.name())
                         .queryParam("pageNumber", "1")
@@ -229,9 +251,8 @@ class BeerApiControllerIT {
 
     @Test
     public void findBeersByNameAndStylePage2Test() throws Exception {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-
         mockMvc.perform(get(ROOT_PATH)
+                        .with(mvcSecurityProcessor)
                         .queryParam("beerName", "IPA")
                         .queryParam("beerStyle", IPA.name())
                         .queryParam("pageNumber", "2")
@@ -244,9 +265,8 @@ class BeerApiControllerIT {
 
     @Test
     public void findBeersByNameAndStylePageTooLargeTest() throws Exception {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-
         mockMvc.perform(get(ROOT_PATH)
+                        .with(mvcSecurityProcessor)
                         .queryParam("beerName", "IPA")
                         .queryParam("beerStyle", IPA.name())
                         .queryParam("pageNumber", "0")

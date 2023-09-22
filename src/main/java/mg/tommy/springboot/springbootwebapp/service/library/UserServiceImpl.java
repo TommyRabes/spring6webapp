@@ -4,11 +4,19 @@ import mg.tommy.springboot.springbootwebapp.model.domain.persistent.Role;
 import mg.tommy.springboot.springbootwebapp.model.domain.persistent.User;
 import mg.tommy.springboot.springbootwebapp.repository.persistent.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+/**
+ * Note that once you define a bean that implements UserDetailsService,
+ * Spring won't autoconfigure a default user/password for you
+ * via UserDetailsServiceAutoConfiguration
+ * (Check the @Conditional annotation on this class to get all the requirements for this autoconfiguration to be effective)
+ */
+@Profile("!http-basic")
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
 
