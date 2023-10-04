@@ -52,7 +52,7 @@ public class BeerApiController {
     }
 
     @PutMapping("{uuid}")
-    public ResponseEntity updateById(@PathVariable("uuid") UUID uuid,
+    public ResponseEntity<Void> updateById(@PathVariable("uuid") UUID uuid,
                                      @Validated(BeerGroup.class) @RequestBody BeerDto beerDto) {
         Optional<BeerDto> updatedBeer = beerService.overwriteById(uuid, beerDto);
         if (updatedBeer.isEmpty()) {
@@ -62,7 +62,7 @@ public class BeerApiController {
     }
 
     @PatchMapping("{uuid}")
-    public ResponseEntity patchById(@PathVariable("uuid") UUID uuid,
+    public ResponseEntity<Void> patchById(@PathVariable("uuid") UUID uuid,
                                     @Validated(PartialBeerGroup.class) @RequestBody BeerDto beerDto) {
         Optional<BeerDto> updatedBeer = beerService.updateById(uuid, beerDto);
         if (updatedBeer.isEmpty()) {
@@ -72,7 +72,7 @@ public class BeerApiController {
     }
 
     @DeleteMapping("{uuid}")
-    public ResponseEntity deleteById(@PathVariable("uuid") UUID uuid) {
+    public ResponseEntity<Void> deleteById(@PathVariable("uuid") UUID uuid) {
         if (!beerService.deleteById(uuid)) {
             throw new NotFoundException("Beer of id: " + uuid + " not found");
         }
