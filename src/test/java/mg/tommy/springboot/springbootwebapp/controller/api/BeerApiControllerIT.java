@@ -5,10 +5,10 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import mg.tommy.springboot.springbootwebapp.controller.api.testconfig.MockedBean;
+import mg.tommy.springboot.springbootwebapp.mapper.BeerMapper;
 import mg.tommy.springboot.springbootwebapp.model.domain.embedded.Beer;
 import mg.tommy.springboot.springbootwebapp.model.domain.embedded.BeerStyle;
 import mg.tommy.springboot.springbootwebapp.model.dto.BeerDto;
-import mg.tommy.springboot.springbootwebapp.mapper.BeerMapper;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.BeerRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,12 +27,12 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
-
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Predicate;
+import java.util.function.Consumer;
 
 import static java.lang.Boolean.TRUE;
 import static mg.tommy.springboot.springbootwebapp.controller.api.BeerApiController.ROOT_PATH;
@@ -42,6 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
@@ -336,7 +337,7 @@ class BeerApiControllerIT {
         });
 
         assertThat(transactionSystemException.getCause().getCause()).isInstanceOf(ConstraintViolationException.class);
-        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).matches(beerEntityConstraintViolation(2, 1, 2, 0, 1));
+        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).satisfies(assertBeerConstraintViolation(2, 1, 2, 0, 1));
     }
 
     @Transactional(transactionManager = "embeddedTransactionManager", propagation = Propagation.NOT_SUPPORTED)
@@ -356,7 +357,7 @@ class BeerApiControllerIT {
         });
 
         assertThat(transactionSystemException.getCause().getCause()).isInstanceOf(ConstraintViolationException.class);
-        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).matches(beerEntityConstraintViolation(1, 0, 1, 1, 1));
+        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).satisfies(assertBeerConstraintViolation(1, 0, 1, 1, 1));
     }
 
     @Transactional("embeddedTransactionManager")
@@ -413,7 +414,7 @@ class BeerApiControllerIT {
         });
 
         assertThat(transactionSystemException.getCause().getCause()).isInstanceOf(ConstraintViolationException.class);
-        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).matches(beerEntityConstraintViolation(0, 1, 2, 0, 1));
+        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).satisfies(assertBeerConstraintViolation(0, 1, 2, 0, 1));
     }
 
     @Transactional(transactionManager = "embeddedTransactionManager", propagation = Propagation.NOT_SUPPORTED)
@@ -436,7 +437,7 @@ class BeerApiControllerIT {
         });
 
         assertThat(transactionSystemException.getCause().getCause()).isInstanceOf(ConstraintViolationException.class);
-        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).matches(beerEntityConstraintViolation(1, 0, 1, 1, 1));
+        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).satisfies(assertBeerConstraintViolation(1, 0, 1, 1, 1));
     }
 
     @Transactional("embeddedTransactionManager")
@@ -513,7 +514,7 @@ class BeerApiControllerIT {
         });
 
         assertThat(transactionSystemException.getCause().getCause()).isInstanceOf(ConstraintViolationException.class);
-        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).matches(beerEntityConstraintViolation(1, 0, 0, 1, 0));
+        assertThat((ConstraintViolationException) transactionSystemException.getCause().getCause()).satisfies(assertBeerConstraintViolation(1, 0, 0, 1, 0));
     }
 
     @Transactional("embeddedTransactionManager")
@@ -525,15 +526,22 @@ class BeerApiControllerIT {
         });
     }
 
-    private Predicate<ConstraintViolationException> beerEntityConstraintViolation(int beerName, int beerStyle, int upc, int quantityOnHand, int price) {
+    private Consumer<ConstraintViolationException> assertBeerConstraintViolation(int beerName, int beerStyle, int upc, int quantityOnHand, int price) {
         return (exception) -> {
             Set<ConstraintViolation<?>> violations = exception.getConstraintViolations();
-            return violations.size() == beerName + beerStyle + upc + quantityOnHand + price &&
-                    violations.stream().filter(violation -> "beerName".equals(violation.getPropertyPath().toString())).count() == beerName &&
-                    violations.stream().filter(violation -> "beerStyle".equals(violation.getPropertyPath().toString())).count() == beerStyle &&
-                    violations.stream().filter(violation -> "upc".equals(violation.getPropertyPath().toString())).count() == upc &&
-                    violations.stream().filter(violation -> "quantityOnHand".equals(violation.getPropertyPath().toString())).count() == quantityOnHand &&
-                    violations.stream().filter(violation -> "price".equals(violation.getPropertyPath().toString())).count() == price;
+            assertThat(violations).hasSize(beerName + beerStyle + upc + quantityOnHand + price);
+            assertThat(violations).satisfies(violationCount("beerName", beerName));
+            assertThat(violations).satisfies(violationCount("beerStyle", beerStyle));
+            assertThat(violations).satisfies(violationCount("upc", upc));
+            assertThat(violations).satisfies(violationCount("quantityOnHand", quantityOnHand));
+            assertThat(violations).satisfies(violationCount("price", price));
+        };
+    }
+
+    private Consumer<? super Collection<? extends ConstraintViolation<?>>> violationCount(String property, int expectedCount) {
+        return (violations) -> {
+            long violationCount = violations.stream().filter(violation -> property.equals(violation.getPropertyPath().toString())).count();
+            assertEquals(expectedCount, violationCount);
         };
     }
 }
