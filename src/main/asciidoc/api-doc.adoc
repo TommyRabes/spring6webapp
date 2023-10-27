@@ -1,0 +1,82 @@
+=== Links
+
+==== authenticationFailureTest
+
+===== CURL command
+include::{snippets}/authenticationFailureTest()/curl-request.adoc[]
+===== Request details
+include::{snippets}/authenticationFailureTest()/http-request.adoc[]
+===== Response details
+include::{snippets}/authenticationFailureTest()/http-response.adoc[]
+
+==== authenticationTest
+
+include::{snippets}/authenticationTest()/curl-request.adoc[]
+include::{snippets}/authenticationTest()/http-request.adoc[]
+include::{snippets}/authenticationTest()/http-response.adoc[]
+
+==== findBeersByBadStyleTest
+
+include::{snippets}/findBeersByBadStyleTest()/curl-request.adoc[]
+include::{snippets}/findBeersByBadStyleTest()/http-request.adoc[]
+include::{snippets}/findBeersByBadStyleTest()/http-response.adoc[]
+
+==== findBeersByEmptyNameTest
+
+include::{snippets}/findBeersByEmptyNameTest()/curl-request.adoc[]
+include::{snippets}/findBeersByEmptyNameTest()/http-request.adoc[]
+include::{snippets}/findBeersByEmptyNameTest()/http-response.adoc[]
+
+==== findBeersByNameTest
+
+include::{snippets}/findBeersByNameTest()/curl-request.adoc[]
+include::{snippets}/findBeersByNameTest()/http-request.adoc[]
+include::{snippets}/findBeersByNameTest()/http-response.adoc[]
+
+==== findBeersByStyleTest
+
+include::{snippets}/findBeersByStyleTest()/curl-request.adoc[]
+include::{snippets}/findBeersByStyleTest()/http-request.adoc[]
+include::{snippets}/findBeersByStyleTest()/http-response.adoc[]
+
+==== findBeersByBadStyleTest
+
+include::{snippets}/findBeersByBadStyleTest()/curl-request.adoc[]
+include::{snippets}/findBeersByBadStyleTest()/http-request.adoc[]
+include::{snippets}/findBeersByBadStyleTest()/http-response.adoc[]
+
+==== findBeersByNameAndStyleTest
+
+include::{snippets}/findBeersByNameAndStyleTest()/curl-request.adoc[]
+include::{snippets}/findBeersByNameAndStyleTest()/http-request.adoc[]
+include::{snippets}/findBeersByNameAndStyleTest()/http-response.adoc[]
+
+==== findBeersByNameAndStyleShowInventoryTest
+
+include::{snippets}/findBeersByNameAndStyleShowInventoryTest()/curl-request.adoc[]
+include::{snippets}/findBeersByNameAndStyleShowInventoryTest()/http-request.adoc[]
+include::{snippets}/findBeersByNameAndStyleShowInventoryTest()/http-response.adoc[]
+
+==== findBeersByNameAndStyleNotShowInventoryTest
+
+include::{snippets}/findBeersByNameAndStyleNotShowInventoryTest()/curl-request.adoc[]
+include::{snippets}/findBeersByNameAndStyleNotShowInventoryTest()/http-request.adoc[]
+include::{snippets}/findBeersByNameAndStyleNotShowInventoryTest()/http-response.adoc[]
+
+==== findBeersByNameAndStylePage1Test
+
+include::{snippets}/findBeersByNameAndStylePage1Test()/curl-request.adoc[]
+include::{snippets}/findBeersByNameAndStylePage1Test()/http-request.adoc[]
+include::{snippets}/findBeersByNameAndStylePage1Test()/http-response.adoc[]
+
+==== findBeersByNameAndStylePage2Test
+
+include::{snippets}/findBeersByNameAndStylePage2Test()/curl-request.adoc[]
+include::{snippets}/findBeersByNameAndStylePage2Test()/http-request.adoc[]
+include::{snippets}/findBeersByNameAndStylePage2Test()/http-response.adoc[]
+
+==== findBeersByNameAndStylePageTooLargeTest
+
+include::{snippets}/findBeersByNameAndStylePageTooLargeTest()/curl-request.adoc[]
+include::{snippets}/findBeersByNameAndStylePageTooLargeTest()/http-request.adoc[]
+include::{snippets}/findBeersByNameAndStylePageTooLargeTest()/http-response.adoc[]

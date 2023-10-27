@@ -47,7 +47,7 @@ public class BeerApiController {
     public ResponseEntity<BeerDto> saveBeer(@Validated(BeerGroup.class) @RequestBody BeerDto beerDto) {
         BeerDto savedBeer = beerService.save(beerDto);
         return ResponseEntity
-                .created(URI.create("/api/v1/beers/" + savedBeer.getId().toString()))
+                .created(URI.create(ROOT_PATH + "/" + savedBeer.getId().toString()))
                 .body(savedBeer);
     }
 

@@ -41,12 +41,12 @@ public class CustomerApiController {
     public ResponseEntity<CustomerDto> saveCustomer(@Validated(CustomerGroup.class) @RequestBody CustomerDto customerDto) {
         CustomerDto savedCustomer = customerService.save(customerDto);
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Location", "/api/v1/customers/" + savedCustomer.getId().toString());
+        httpHeaders.add("Location", ROOT_PATH + "/" + savedCustomer.getId().toString());
         return new ResponseEntity<>(savedCustomer, httpHeaders, HttpStatus.CREATED);
     }
 
     @PutMapping("{uuid}")
-    public ResponseEntity updateCustomer(@PathVariable("uuid") UUID uuid,
+    public ResponseEntity<Void> updateCustomer(@PathVariable("uuid") UUID uuid,
                                          @Validated(CustomerGroup.class) @RequestBody CustomerDto customerDto) {
         Optional<CustomerDto> overwrittenCustomer = customerService.overwriteById(uuid, customerDto);
         if (overwrittenCustomer.isEmpty()) {
@@ -56,17 +56,17 @@ public class CustomerApiController {
     }
 
     @PatchMapping("{uuid}")
-    public ResponseEntity patchCustomer(@PathVariable("uuid") UUID uuid,
+    public ResponseEntity<Void> patchCustomer(@PathVariable("uuid") UUID uuid,
                                         @Validated(PartialCustomerGroup.class) @RequestBody CustomerDto customerDto) {
         Optional<CustomerDto> patchedCustomer = customerService.updateById(uuid, customerDto);
         if (patchedCustomer.isEmpty()) {
             throw new NotFoundException("Customer of id: " + uuid + " not found");
         }
-        return new ResponseEntity(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @DeleteMapping("{uuid}")
-    public ResponseEntity deleteCustomer(@PathVariable("uuid") UUID uuid) {
+    public ResponseEntity<Void> deleteCustomer(@PathVariable("uuid") UUID uuid) {
         if (!customerService.deleteById(uuid)) {
             throw new NotFoundException("Customer of id: " + uuid + " not found");
         }

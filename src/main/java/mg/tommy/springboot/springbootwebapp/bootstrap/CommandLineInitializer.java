@@ -10,17 +10,16 @@ import mg.tommy.springboot.springbootwebapp.service.brewing.BeerCsvService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Scope;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.ResourceUtils;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -38,6 +37,7 @@ public class CommandLineInitializer implements CommandLineRunner {
     private final CustomerRepository customerRepository;
     private final BeerCsvService beerCsvService;
     private final BeerMapper beerMapper;
+    private final ResourceLoader resourceLoader;
 
     @Transactional("embeddedTransactionManager")
     @Override
@@ -84,11 +84,11 @@ public class CommandLineInitializer implements CommandLineRunner {
 
     }
 
-    private void insertBeerCsvData() throws FileNotFoundException {
+    private void insertBeerCsvData() throws IOException {
         if (beerRepository.count() > 1000) return;
 
-        File csvFile = ResourceUtils.getFile("classpath:static/repository/csv/beers.csv");
-        List<BeerRecord> beerRecords = beerCsvService.convertCsv(csvFile);
+        InputStream csvInputStream = resourceLoader.getResource("classpath:static/repository/csv/beers.csv").getInputStream();
+        List<BeerRecord> beerRecords = beerCsvService.convertCsv(csvInputStream);
         List<Beer> beers = beerRecords.stream().map(beerMapper::toBeer).collect(toList());
         beerRepository.saveAll(beers);
     }

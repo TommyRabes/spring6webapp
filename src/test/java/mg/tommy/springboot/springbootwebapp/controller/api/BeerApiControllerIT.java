@@ -11,13 +11,17 @@ import mg.tommy.springboot.springbootwebapp.model.domain.embedded.BeerStyle;
 import mg.tommy.springboot.springbootwebapp.model.dto.BeerDto;
 import mg.tommy.springboot.springbootwebapp.repository.embedded.BeerRepository;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.restdocs.RestDocumentationContextProvider;
+import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
@@ -45,6 +49,9 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -54,6 +61,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Import(MockedBean.class)
+@ExtendWith({ RestDocumentationExtension.class, SpringExtension.class })
 class BeerApiControllerIT {
     @Autowired
     RequestPostProcessor mvcSecurityProcessor;
@@ -82,9 +90,11 @@ class BeerApiControllerIT {
     MockMvc mockMvc;
 
     @BeforeEach
-    void setUp() {
+    void setUp(RestDocumentationContextProvider restDocumentation, TestInfo testInfo) {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(documentationConfiguration(restDocumentation))
                 .apply(springSecurity())
+                .alwaysDo(document(testInfo.getDisplayName(), preprocessRequest(prettyPrint()), preprocessResponse(prettyPrint())))
                 .build();
     }
 
@@ -158,10 +168,22 @@ class BeerApiControllerIT {
     public void findBeersByEmptyNameTest() throws Exception {
         mockMvc.perform(get(ROOT_PATH)
                         .with(mvcSecurityProcessor)
+                        //.header("Authorization", "Bearer token")
                         .queryParam("beerName", ""))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()", is(25)))
-                .andExpect(jsonPath("$.totalElements", is(2413)));
+                .andExpect(jsonPath("$.totalElements", is(2413)))
+                .andDo(document("findBeersByEmptyNameTest()",
+                        // requestHeaders(headerWithName("Authorization").description("Either Http Basic or a valid JWT Bearer token"))
+                        /* Spring Security's JwtRequestPostProcessor doesn't seem like adding any "Authorization" header to the request
+                            Or Spring RestDocs is unable to detect it via requestHeaders()
+                            One way to workaround this is to mock JwtDecoder so that it returns a predefined token value
+                            and set the "Authorization" header as per that token for each authenticated test case
+                            or keep using RequestPostProcessor and instead use Spring RestDocs' preprocessRequest method instead
+                            In the latter case, the documentation is not tied to the test though
+                         */
+                        preprocessRequest(modifyHeaders().add("Authorization", "Dummy token"))
+                ));
     }
 
     @Test
@@ -171,7 +193,10 @@ class BeerApiControllerIT {
                         .queryParam("beerName", "IPA"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()", is(25)))
-                .andExpect(jsonPath("$.totalElements", is(336)));
+                .andExpect(jsonPath("$.totalElements", is(336)))
+                .andDo(document("findBeersByNameTest()",
+                        preprocessRequest(modifyHeaders().add("Authorization", "Dummy token"))
+                ));
     }
 
     @Test
@@ -181,7 +206,10 @@ class BeerApiControllerIT {
                         .queryParam("beerStyle", LAGER.name()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()", is(25)))
-                .andExpect(jsonPath("$.totalElements", is(158)));
+                .andExpect(jsonPath("$.totalElements", is(158)))
+                .andDo(document("findBeersByStyleTest()",
+                        preprocessRequest(modifyHeaders().add("Authorization", "Dummy token"))
+                ));
     }
 
     @Test
@@ -189,7 +217,10 @@ class BeerApiControllerIT {
         mockMvc.perform(get(ROOT_PATH)
                         .with(mvcSecurityProcessor)
                         .queryParam("beerStyle", "STDOUT"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andDo(document("findBeersByBadStyleTest()",
+                        preprocessRequest(modifyHeaders().add("Authorization", "Dummy token"))
+                ));
     }
 
     @Test
@@ -200,7 +231,10 @@ class BeerApiControllerIT {
                         .queryParam("beerStyle", IPA.name()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()", is(25)))
-                .andExpect(jsonPath("$.totalElements", is(324)));
+                .andExpect(jsonPath("$.totalElements", is(324)))
+                .andDo(document("findBeersByNameAndStyleTest()",
+                        preprocessRequest(modifyHeaders().add("Authorization", "Dummy token"))
+                ));
     }
 
     @Test
@@ -218,6 +252,9 @@ class BeerApiControllerIT {
         for (int i = 0; i < returnedMatch; i++) {
             resultActions = resultActions.andExpect(jsonPath("$.content.[" + i + "].quantityOnHand").value(notNullValue()));
         }
+        resultActions.andDo(document("findBeersByNameAndStyleShowInventoryTest()",
+                preprocessRequest(modifyHeaders().add("Authorization", "Dummy token"))
+        ));
     }
 
     @Test
@@ -234,6 +271,9 @@ class BeerApiControllerIT {
         for (int i = 0; i < returnedMatch; i++) {
             resultActions = resultActions.andExpect(jsonPath("$.content.[" + i + "].quantityOnHand").value(nullValue()));
         }
+        resultActions.andDo(document("findBeersByNameAndStyleNotShowInventoryTest()",
+                preprocessRequest(modifyHeaders().add("Authorization", "Dummy token"))
+        ));
     }
 
     @Test
@@ -247,7 +287,10 @@ class BeerApiControllerIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()", is(50)))
                 .andExpect(jsonPath("$.number", is(1)))
-                .andExpect(jsonPath("$.totalElements", is(324)));
+                .andExpect(jsonPath("$.totalElements", is(324)))
+                .andDo(document("findBeersByNameAndStylePage1Test()",
+                        preprocessRequest(modifyHeaders().add("Authorization", "Dummy token"))
+                ));
     }
 
     @Test
@@ -261,7 +304,10 @@ class BeerApiControllerIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()", is(50)))
                 .andExpect(jsonPath("$.number", is(2)))
-                .andExpect(jsonPath("$.totalElements", is(324)));
+                .andExpect(jsonPath("$.totalElements", is(324)))
+                .andDo(document("findBeersByNameAndStylePage2Test()",
+                        preprocessRequest(modifyHeaders().add("Authorization", "Dummy token"))
+                ));
     }
 
     @Test
@@ -275,7 +321,10 @@ class BeerApiControllerIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()", is(324)))
                 .andExpect(jsonPath("$.number", is(0)))
-                .andExpect(jsonPath("$.totalElements", is(324)));
+                .andExpect(jsonPath("$.totalElements", is(324)))
+                .andDo(document("findBeersByNameAndStylePageTooLargeTest()",
+                        preprocessRequest(modifyHeaders().add("Authorization", "Dummy token"))
+                ));
     }
 
     @Transactional("embeddedTransactionManager")

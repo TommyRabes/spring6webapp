@@ -4,12 +4,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.time.Instant;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 
 // Intellij is definitely running tests his own way
 // Dude is able to detect beans that Spring can't (but should) find when we run the maven surefire plugin
@@ -51,5 +56,32 @@ public class MockedBean {
                     .subject("oidc-client")
                     .notBefore(Instant.now().minusSeconds(5L));
         });
+    }
+
+    @Profile("form-login")
+    @Bean
+    public RequestPostProcessor mvcLoginProcessor() {
+        return user(User.builder()
+                .username("admin@gmail.com")
+                .password("{pbkdf2@SpringSecurity_v5_8}5070e01244772466c4b842cc367df8164deaa379b73d04bd36f524b94a9540e4b4014e9d3c6f2d8d52f936fb0c5b6823")
+                .roles("ADMIN")
+                .build());
+    }
+
+    //@Profile("oauth2")
+    //@Bean
+    public JwtDecoder jwtDecoder() {
+        JwtDecoder jwtDecoder = mock(JwtDecoder.class);
+        Jwt jwt = Jwt.withTokenValue("token")
+                .claims(claims -> {
+                    claims.put("scope", "message.read");
+                    claims.put("scope", "message.write");
+                })
+                .header("alg", "none")
+                .subject("oidc-client")
+                .notBefore(Instant.now().minusSeconds(5L))
+                .build();
+        when(jwtDecoder.decode(anyString())).thenReturn(jwt);
+        return jwtDecoder;
     }
 }

@@ -11,9 +11,12 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import static org.springframework.boot.autoconfigure.security.servlet.PathRequest.toH2Console;
+import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -29,6 +32,16 @@ public class SecurityConfig {
     //@Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.ignoring().requestMatchers(new AntPathRequestMatcher("/console/**"));
+    }
+
+    // Due to vulnerability CVE-2023-34035, we should not rely on pattern matching using plain String
+    // Now we must pass in a RequestMatcher instance
+    // For more information: https://spring.io/security/cve-2023-34035
+    // Prefer using MvcRequestMatcher over AntPathRequestMatcher as the former is more performant,
+    // although it brings in some limitations compared to the latter
+    @Bean
+    MvcRequestMatcher.Builder mvc(HandlerMappingIntrospector introspector) {
+        return new MvcRequestMatcher.Builder(introspector);
     }
 
     @Profile("H2")
@@ -50,11 +63,11 @@ public class SecurityConfig {
 
     @Profile("http-basic")
     @Bean
-    public SecurityFilterChain restfulApiFilterChain(HttpSecurity securityBuilder) throws Exception {
+    public SecurityFilterChain restfulApiFilterChain(HttpSecurity securityBuilder, MvcRequestMatcher.Builder mvc) throws Exception {
         securityBuilder
                 .authorizeHttpRequests(requests -> requests.anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"));
+                .csrf(csrf -> csrf.ignoringRequestMatchers(mvc.pattern("/api/**")));
         return securityBuilder.build();
     }
 
@@ -69,28 +82,28 @@ public class SecurityConfig {
 
     @Profile("form-login")
     @Bean
-    public SecurityFilterChain routeAccessFilterChain(HttpSecurity securityBuilder) throws Exception {
+    public SecurityFilterChain routeAccessFilterChain(HttpSecurity securityBuilder, MvcRequestMatcher.Builder mvc) throws Exception {
         securityBuilder
                 .authorizeHttpRequests(requests -> requests
                         // Must add those 3 values to allow access to index.html
                         // Spring forward any get request that match "" and "/" to "/index.html", if no explicit request mapping has been set
-                        .requestMatchers("", "/", "/index.html").permitAll()
+                        .requestMatchers(antMatcher("/"), antMatcher("/index.html")).permitAll()
 
                         // Can't use suffix pattern matching along with '**' multi-segment matching (e.g: **/*.css)
                         // as of Spring 5.3 since PathPattern has been introduced as the new default pattern matching strategy
                         // Prior to Spring 5.3, it used to be AntPathMatcher. To toggle back to AntPatchMatcher,
                         // override the following property: 'spring.mvc.pathmatch.matching-strategy: ant_path_matcher'
                         // (From Spring 5.3 on, the default is 'path-pattern-parser')
-                        .requestMatchers("/css/**", "/webjars/**").permitAll()
-                        .requestMatchers("/api/**").permitAll()
-                        .requestMatchers("/plans", "/plans/**").permitAll()
+                        .requestMatchers(mvc.pattern("/css/*"), mvc.pattern("/webjars/*")).permitAll()
+                        .requestMatchers(mvc.pattern("/api/**")).permitAll()
+                        .requestMatchers(mvc.pattern("/plans"), mvc.pattern("/plans/**")).permitAll()
 
                         // An alternative to Spring's @PreAuthorize annotation
                         // But remember that setting this control here (in a more global context)
                         // rather than at the controller level results in not being able to handle any client access denial
                         // in an @ExceptionHandler annotated method
                         // This check is performed earlier in the FilterChain
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers(mvc.pattern("/admin/**")).hasRole("ADMIN")
                         //.hasRole("ADMIN")
                         // lockdown any other request
                         .anyRequest().permitAll()
@@ -111,8 +124,8 @@ public class SecurityConfig {
                         // csrf protection is activated by default, but it's safe to disable for REST endpoints
                         // see: https://stackoverflow.com/questions/19468209/spring-security-configuration-http-403-error
                         // and https://spring.io/blog/2013/08/21/spring-security-3-2-0-rc1-highlights-csrf-protection
-                        .ignoringRequestMatchers("/plans", "/plans/**")
-                        .ignoringRequestMatchers("/api/**"))
+                        .ignoringRequestMatchers(mvc.pattern("/plans"), mvc.pattern("/plans/**"))
+                        .ignoringRequestMatchers(mvc.pattern("/api/**")))
                 .headers(headers -> headers.frameOptions(frameOptionsConfig -> frameOptionsConfig.sameOrigin()));
 
         return securityBuilder.build();
