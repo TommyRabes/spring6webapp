@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: spring-boot-webapp
+  name: spring-boot-webapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spring-boot-webapp
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: spring-boot-webapp
+    spec:
+      containers:
+      - image: tommyrabes/spring-boot-webapp
+        name: spring-boot-webapp
+        resources: {}
+status: {}

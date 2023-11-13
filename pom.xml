@@ -117,6 +117,29 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 			<plugin>
+				<groupId>io.fabric8</groupId>
+				<artifactId>docker-maven-plugin</artifactId>
+				<version>0.43.4</version>
+				<configuration>
+					<verbose>true</verbose>
+					<images>
+						<image>
+							<name>tommyrabes/${project.artifactId}</name>
+							<build>
+								<assembly>
+									<descriptorRef>artifact</descriptorRef>
+								</assembly>
+								<dockerFile>Dockerfile</dockerFile>
+								<tags>
+									<tag>latest</tag>
+									<tag>${project.version}</tag>
+								</tags>
+							</build>
+						</image>
+					</images>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.11.0</version>

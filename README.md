@@ -24,7 +24,7 @@ There are several maven profiles that you need to activate in order for the app 
 
 ### Run the application
 **NOTE:** All the commands below must be run from the root folder of the project
-#### Using Maven
+#### Using Spring Boot Maven plugin
 You can use an installed maven on your local machine :
 ```
 mvn spring-boot:run -P h2-mysql,oauth2-security,-h2-pg -Dspring-boot.run.jvmArguments="-Dmysql.username={your username} -Dmysql.password={your password}"
@@ -47,6 +47,8 @@ java -jar spring-boot-webapp-0.0.1-SNAPSHOT.jar --mysql.username={your username}
 ```
 
 #### With Docker
+> It is recommended to use Docker Compose rather than this method, only go for this one if you don't have Docker Compose on your machine
+> otherwise skip ahead to the next section
 The `Dockerfile` is located at `src/main/docker`
 To create the image, run:
 ```
@@ -75,4 +77,36 @@ docker run -d -p 8083:8083 --name {container name} --network {network name} {ima
 ```
 
 #### Using Docker Compose
-...
+From the project root folder, run the command:
+```
+docker compose -f compose-rest.yaml up
+```
+Note that the image involved in this stack was built with `oauth2-security` enabled, which means only REST endpoints will be accessible
+More reworks need to be done in the Dockerfile to build the jar while generating the image so that we have more control on which profile is active and which is not
+and thus, we can toggle over from a WS to a webapp
+
+#### Using Kubernetes
+You must have Kubernetes installed on your machine (including kubectl) for this method.
+From the `k8s` folder, run the commands:
+```
+kubectl apply -f book-mysql-deployment.yml
+kubectl apply -f book-mysql-service.yml
+
+kubectl apply -f oauth2-authorization-server-deployment.yml
+kubectl apply -f oauth2-authorization-server-service.yml
+
+kubectl apply -f spring-boot-webapp-deployment.yml
+kubectl apply -f spring-boot-webapp-service.yml
+```
+
+To clear everything that has been deployed, run:
+```
+kubectl delete -f book-mysql-deployment.yml
+kubectl delete -f book-mysql-service.yml
+
+kubectl delete -f oauth2-authorization-server-deployment.yml
+kubectl delete -f oauth2-authorization-server-service.yml
+
+kubectl delete -f spring-boot-webapp-deployment.yml
+kubectl delete -f spring-boot-webapp-service.yml
+```

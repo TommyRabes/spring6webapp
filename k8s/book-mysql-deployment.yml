@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: book-mysql
+  name: book-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: book-mysql
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: book-mysql
+    spec:
+      containers:
+      - image: mysql:8.2
+        name: mysql
+        resources: {}
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: "123456"
+          - name: MYSQL_DATABASE
+            value: bookmanagement
+          - name: MYSQL_USER
+            value: Tommy
+          - name: MYSQL_PASSWORD
+            value: "123456"
+status: {}
